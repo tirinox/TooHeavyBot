@@ -3,12 +3,12 @@ def say(s, kb=None):
 
 
 
-def best_weight_dialog_entry(mgs, context):
+def dlg_best_weight_dialog_entry(mgs, context):
     say("Давай расчитаем твой идеальный вес?")
-    return ask_sex
+    return dlg_ask_sex
 
 
-def ask_sex(context):
+def dlg_ask_sex(context):
     while True:
         say("Ты м или ж?", [
             'М', 'Ж'
@@ -18,20 +18,20 @@ def ask_sex(context):
 
         if answer in ('М', 'Ж'):
             context.sex = answer
-            yield ask_height
+            yield dlg_ask_height
         else:
             say('Неизвестный мне пол!')
 
 
-def ask_height(msg, context):
+def dlg_ask_height(msg, context):
     say("введи свой рост в см")
-    return wait_height
+    return dlg_wait_height
 
 
-def wait_height(msg, context):
+def dlg_wait_height(msg, context):
     try:
         answer = int(msg.text)
 
     except ValueError:
         say('неправильное число')
-        return ask_height
+        return dlg_ask_height
