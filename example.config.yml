@@ -1,0 +1,13 @@
+# rename it .config.yml
+
+telegram:
+  token: 123:put_your_telegram_token_here
+
+db:
+  redis:
+    host: 'thb_redis'
+    port: 6379
+    db_no: 7
+
+# set false for production!
+debug: true
