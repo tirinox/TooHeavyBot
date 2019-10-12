@@ -1,11 +1,24 @@
 from aiogram import Bot, Dispatcher, executor, types
-from src.util.config import Config
+from util.config import Config
 import logging
+import rom
 
 
-debug = Config().is_debug
+config = Config()
+
+debug = config.is_debug
 level = logging.INFO if debug else logging.ERROR
 logging.basicConfig(level=level)
+
+db_config = config.subtree('db.redis')
+
+print(db_config)
+
+rom.util.set_connection_settings(
+    host=db_config.get('host'),
+    port=db_config.get('port'),
+    db=db_config.get('db_no')
+)
 
 token = Config().get('telegram.token')
 bot = Bot(token)

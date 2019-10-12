@@ -1,7 +1,7 @@
 import yaml
 import sys
-from src.util.singleton import Singleton
-from src.util.date import parse_timespan_to_seconds
+from util.singleton import Singleton
+from util.date import parse_timespan_to_seconds
 import os
 
 

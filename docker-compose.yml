@@ -1,0 +1,21 @@
+version: '3'
+services:
+  redis:
+    image: redis:5-buster
+    container_name: thb_redis
+    expose:
+      - 6379
+    volumes:
+      - ./_db:/data
+    restart: always
+
+  bot:
+    build: .
+    container_name: thb_bot
+    volumes:
+      - .config.yml:/app/.config.yml
+    links:
+      - redis
+    ports:
+      - "26888:26888"
+    restart: always
