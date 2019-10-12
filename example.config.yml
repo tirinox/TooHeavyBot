@@ -5,9 +5,8 @@ telegram:
 
 db:
   redis:
-    host: 'thb_redis'
-    port: 6379
-    db_no: 7
+    url: 'redis://thb_redis:6379/7'
+    db: 7
 
 # set false for production!
 debug: true
