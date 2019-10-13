@@ -1,7 +1,7 @@
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
 from models.profile import Profile
 from aioredis import Redis
-from msg_io import Input, Output
+from msg_io import Input, Output, NEW_LINE
 
 
 class MessageHandler:
@@ -34,15 +34,36 @@ class MessageHandler:
         profile = Profile(self.redis, self.message.from_user.id)
         state = await profile.dialog_state()
 
+        outputs = []
+
         handler = self.get_handler(state)
 
-        output = await handler(Input(self.message, profile, text))
-        if isinstance(output, tuple):
-            output = Output(*output)
+        while True:
+            output = await handler(Input(self.message, profile, text))
+            if isinstance(output, tuple):
+                output = Output(*output)
 
-        if callable(output.new_state):
-            state = output.new_state.__name__
+            if output.reply_text is not None:
+                outputs.append(output)
+
+            if callable(output.new_state):
+                state = output.new_state.__name__
+
+            handler = self.get_handler(state)
+
+            if hasattr(handler, 'uses_answer'):
+                break
 
         await profile.set_dialog_state(state)
-        if output.reply_text is not None:
-            await self.message.reply(output.reply_text, reply=False, reply_markup=output.keyboard)
+
+        if outputs:
+            messages = (output.reply_text for output in outputs if output.reply_text is not None)
+
+            last_output = outputs[-1]  # type: Output
+            if last_output.join_messages:
+                message = NEW_LINE.join(messages)
+                if message:
+                    await self.message.reply(message, reply=False, reply_markup=last_output.keyboard)
+            else:
+                for message in messages:
+                    await self.message.reply(message, reply=False, reply_markup=last_output.keyboard)
