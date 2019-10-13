@@ -11,12 +11,13 @@ class MessageHandler:
         self.handlers = handlers
 
     async def handle_start(self, code):
-        if code:
-            # надо прервать любой диалог и обрбаотать диалог с кодом
-            await self.message.reply(f"Hi!\nYour code is {code}")
-        else:
-            # сделать стэйт main menu
-            await self.message.reply(f'Hi! this is start without params!')
+        return None
+        # if code:
+        #     # надо прервать любой диалог и обрбаотать диалог с кодом
+        #     await self.message.reply(f"Hi!\nYour code is {code}")
+        # else:
+        #     # сделать стэйт main menu
+        #     await self.message.reply(f'Hi! this is start without params!')
 
     def get_handler(self, state):
         if state is None or state not in self.handlers:
@@ -24,15 +25,14 @@ class MessageHandler:
         return self.handlers[state]
 
     async def handle(self):
+        profile = Profile(self.redis, self.message.from_user.id)
+        state = await profile.dialog_state()
+
         text = str(self.message.text)
         start_prefix = '/start'
         if text.startswith(start_prefix):
             code = text[len(start_prefix):].strip()
-            await self.handle_start(code)
-            return
-
-        profile = Profile(self.redis, self.message.from_user.id)
-        state = await profile.dialog_state()
+            state = await self.handle_start(code)
 
         outputs = []
 

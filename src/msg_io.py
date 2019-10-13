@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from models.profile import Profile
-from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from typing import Union
 
 
@@ -25,3 +25,8 @@ class Output:
     reply_text: str = None
     keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
     join_messages: bool = True
+
+
+B = KeyboardButton
+KB = ReplyKeyboardMarkup
+KBRemove = ReplyKeyboardRemove

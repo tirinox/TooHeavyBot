@@ -1,9 +1,8 @@
-from msg_io import Input, Output, uses_answer
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from msg_io import Input, Output, uses_answer, KB, B
 
-YES_NO_KB = ReplyKeyboardMarkup([
-    [KeyboardButton('yes'), KeyboardButton('no'), KeyboardButton('hz')]
-], one_time_keyboard=True)
+YES_NO_KB = KB([
+    [B('yes'), B('no'), B('hz')]
+], one_time_keyboard=True, row_width=1)
 
 
 @uses_answer
@@ -13,7 +12,7 @@ async def dlg_asked_q(input: Input):
     elif input.text == 'no':
         return dlg_main_menu, 'you said no!'
     else:
-        return dlg_asked_q, 'stupid! yes or no!!!', YES_NO_KB
+        return dlg_asked_q, '<b>stupid!</b> yes or no!!!', YES_NO_KB
 
 
 async def dlg_main_menu(_):
