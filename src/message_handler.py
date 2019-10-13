@@ -1,7 +1,7 @@
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import Message
 from models.profile import Profile
 from aioredis import Redis
-from msg_io import Input, Output, NEW_LINE
+from msg_io import Input, Output, NEW_LINE, MAIN_HANDLER_KEY, START_COMMAND, does_require_answer
 
 
 class MessageHandler:
@@ -21,7 +21,7 @@ class MessageHandler:
 
     def get_handler(self, state):
         if state is None or state not in self.handlers:
-            state = 'main'
+            state = MAIN_HANDLER_KEY
         return self.handlers[state]
 
     async def handle(self):
@@ -29,9 +29,8 @@ class MessageHandler:
         state = await profile.dialog_state()
 
         text = str(self.message.text)
-        start_prefix = '/start'
-        if text.startswith(start_prefix):
-            code = text[len(start_prefix):].strip()
+        if text.startswith(START_COMMAND):
+            code = text[len(START_COMMAND):].strip()
             state = await self.handle_start(code)
 
         outputs = []
@@ -51,7 +50,7 @@ class MessageHandler:
 
             handler = self.get_handler(state)
 
-            if hasattr(handler, 'uses_answer'):
+            if does_require_answer(handler):
                 break
 
         await profile.set_dialog_state(state)

@@ -5,11 +5,27 @@ from typing import Union
 
 
 NEW_LINE = '\n'
+MAIN_HANDLER_KEY = 'main'
+START_COMMAND = '/start'
 
 
-def uses_answer(f):
-    f.uses_answer = True
+def require_answer(f):
+    f = sentence(f)
+    f.this_requires_answer = True
     return f
+
+
+def sentence(f):
+    f.this_is_dialog_sentence = True
+    return f
+
+
+def does_require_answer(o):
+    return hasattr(o, 'this_requires_answer')
+
+
+def is_sentence(o):
+    return hasattr(o, 'this_is_dialog_sentence')
 
 
 @dataclass
