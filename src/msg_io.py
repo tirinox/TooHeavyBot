@@ -56,15 +56,6 @@ KB = ReplyKeyboardMarkup
 KBRemove = ReplyKeyboardRemove
 
 
-@dataclass
-class Menu(Output):
-    variants: list = None
-
-
-def get_message_handlers(my_globals: dict):
-    return {name: obj for name, obj in my_globals.items() if is_sentence(obj)}
-
-
 def make_keyboard_and_mapping(variants: list, **kwargs):
     if not variants:
         return ReplyKeyboardRemove(), {}
@@ -83,8 +74,25 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
                     caption, value = elem
                 else:
                     caption = value = elem
-                mapping[value] = caption
+                mapping[caption] = value
                 kb_row.append(KeyboardButton(caption))
             keyboard.append(kb_row)
 
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
+
+
+class Menu(Output):
+    def __init__(self, unique_name, prompt, variants, success_state, **kwargs):
+        self.prompt = prompt
+        self.keyboard, self.mapper = make_keyboard_and_mapping(variants, **kwargs)
+        self.success_state = success_state
+
+        @require_answer
+        def answerer(input: Input):
+            text = input.text
+            if text in self.mapper:
+                return self.mapper[text]
+
+        answerer.__name__ = unique_name + '_answerer'
+        self.new_state = answerer
+

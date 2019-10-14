@@ -36,12 +36,9 @@ class MessageHandler:
             code = text[len(START_COMMAND):].strip()
             state_name = await self.handle_start(code)
 
-        outputs = []
-
-        print(state_name)
-
         handler = self.get_handler(state_name)
 
+        outputs = []
         while True:
             output = await handler(Input(message, profile, text))
             if isinstance(output, tuple):
@@ -55,7 +52,6 @@ class MessageHandler:
 
             state_name = fname(new_state)
             if state_name not in self.handlers:
-                print(self.handlers)
                 self.handlers[state_name] = new_state
 
             handler = self.get_handler(state_name)
