@@ -41,6 +41,7 @@ class Input:
     message: Message
     profile: Profile
     text: str
+    param: object = None
 
 
 @dataclass
@@ -49,6 +50,7 @@ class Output:
     reply_text: str = None
     keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
     join_messages: bool = True
+    param: object = None
 
 
 B = KeyboardButton
@@ -82,17 +84,27 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
 
 
 class Menu(Output):
+    INVALID_ANSWER_MESSAGE = "<pre>wrong answer!</pre>"
+
     def __init__(self, unique_name, prompt, variants, success_state, **kwargs):
         self.prompt = prompt
         self.keyboard, self.mapper = make_keyboard_and_mapping(variants, **kwargs)
         self.success_state = success_state
 
+        @sentence
+        async def asker(_):
+            return Output(answerer, prompt, self.keyboard, **kwargs)
+
+        asker.__name__ = unique_name + '_in'
+
         @require_answer
-        def answerer(input: Input):
+        async def answerer(input: Input):
             text = input.text
             if text in self.mapper:
-                return self.mapper[text]
+                return Output(success_state, param=self.mapper[text])
+            else:
+                return Output(asker, self.INVALID_ANSWER_MESSAGE)
 
-        answerer.__name__ = unique_name + '_answerer'
-        self.new_state = answerer
+        answerer.__name__ = unique_name + '_out'
+        self.new_state = asker
 

@@ -37,12 +37,15 @@ class MessageHandler:
             state_name = await self.handle_start(code)
 
         handler = self.get_handler(state_name)
+        param = None
 
         outputs = []
         while True:
-            output = await handler(Input(message, profile, text))
+            output = await handler(Input(message, profile, text, param))
             if isinstance(output, tuple):
                 output = Output(*output)
+
+            param = output.param
 
             if output.reply_text is not None:
                 outputs.append(output)
@@ -51,6 +54,7 @@ class MessageHandler:
             assert callable(new_state)
 
             state_name = fname(new_state)
+
             if state_name not in self.handlers:
                 self.handlers[state_name] = new_state
 
