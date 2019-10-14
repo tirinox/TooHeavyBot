@@ -5,8 +5,12 @@ from typing import Union
 
 
 NEW_LINE = '\n'
-MAIN_HANDLER_KEY = 'main'
+
 START_COMMAND = '/start'
+
+
+def fname(f):
+    return f.__name__
 
 
 def require_answer(f):
@@ -28,6 +32,10 @@ def is_sentence(o):
     return hasattr(o, 'this_is_dialog_sentence')
 
 
+def register_global(name, value):
+    globals()[name] = value
+
+
 @dataclass
 class Input:
     message: Message
@@ -46,3 +54,37 @@ class Output:
 B = KeyboardButton
 KB = ReplyKeyboardMarkup
 KBRemove = ReplyKeyboardRemove
+
+
+@dataclass
+class Menu(Output):
+    variants: list = None
+
+
+def get_message_handlers(my_globals: dict):
+    return {name: obj for name, obj in my_globals.items() if is_sentence(obj)}
+
+
+def make_keyboard_and_mapping(variants: list, **kwargs):
+    if not variants:
+        return ReplyKeyboardRemove(), {}
+    else:
+        is_list = lambda it: isinstance(it, list)
+        two_level = all(map(is_list, variants))
+        if not two_level:
+            variants = [variants]
+
+        keyboard = []
+        mapping = {}
+        for row in variants:
+            kb_row = []
+            for elem in row:
+                if isinstance(elem, tuple):
+                    caption, value = elem
+                else:
+                    caption = value = elem
+                mapping[value] = caption
+                kb_row.append(KeyboardButton(caption))
+            keyboard.append(kb_row)
+
+        return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
