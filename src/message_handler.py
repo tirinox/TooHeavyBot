@@ -56,8 +56,6 @@ class MessageHandler:
             if io_obj.out_text:
                 all_reply_texts.append(io_obj.out_text)
 
-            assert callable(io_obj.out_next_func)
-
             dialog_state[self.STATE_FUNCTION_KEY] = fname(io_obj.out_next_func)
 
             handler = self.get_handler(dialog_state)

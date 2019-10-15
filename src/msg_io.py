@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from models.profile import Profile
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from typing import Union
+import logging
 
 
 NEW_LINE = '\n'
@@ -10,7 +11,7 @@ START_COMMAND = '/start'
 
 
 def fname(f):
-    return f.__name__
+    return f.__name__ if callable(f) else str(f)
 
 
 def require_answer(f):
@@ -54,25 +55,40 @@ class DialogIO:
         self.out_next_func = next_func
         return self
 
+    def set(self, name, value):
+        self.state[name] = value
+        return self
+
+
+def normalize_variants(variants: list):
+    is_list = lambda it: isinstance(it, list)
+    two_level = all(map(is_list, variants))
+    if not two_level:
+        variants = [variants]
+
+    variants_with_keys = []
+    for row in variants:
+        row_with_keys = []
+        for col in row:
+            if isinstance(col, list) or isinstance(col, tuple):
+                row_with_keys.append(col)
+            else:
+                row_with_keys.append([col, col])
+        variants_with_keys.append(row_with_keys)
+
+    return variants_with_keys
+
 
 def make_keyboard_and_mapping(variants: list, **kwargs):
     if not variants:
         return ReplyKeyboardRemove(), {}
     else:
-        is_list = lambda it: isinstance(it, list)
-        two_level = all(map(is_list, variants))
-        if not two_level:
-            variants = [variants]
-
         keyboard = []
         mapping = {}
         for row in variants:
             kb_row = []
             for elem in row:
-                if isinstance(elem, tuple):
-                    caption, value = elem
-                else:
-                    caption = value = elem
+                caption, value = elem
                 mapping[caption] = value
                 kb_row.append(KeyboardButton(caption))
             keyboard.append(kb_row)
@@ -81,22 +97,43 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
 
 
 class Menu:
-    MENU_MAPPING_KEY = '_menu_map'
-    INVALID_ANSWER_MESSAGE = "<pre>wrong answer!</pre>"
+    KEY = '_menu'
+
+    INVALID_ANSWER_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
 
     @staticmethod
-    def create(input: DialogIO, next_func, prompt, variants):
-        keyboard, mapping = make_keyboard_and_mapping(variants)
-        input.state[Menu.MENU_MAPPING_KEY] = mapping
-        return input.next(next_func).reply(prompt, keyboard)
+    def create(dlgio: DialogIO, question_func, answer_func, prompt, variants):
+        variants = normalize_variants(variants)
+
+        dlgio.state[Menu.KEY] = {
+            'variants': variants,
+            'question_func': fname(question_func),
+        }
+
+        keyboard, _ = make_keyboard_and_mapping(variants)
+        return dlgio.next(answer_func).reply(prompt, keyboard)
 
     @staticmethod
-    def value(input: DialogIO):
-        key = Menu.MENU_MAPPING_KEY
-        if isinstance(input.state, dict) and key in input.state and input.text in input.state[key]:
-            value = input.state[key][input.text]
-            del input.state[key]
-            return value
+    def value(dlgio: DialogIO):
+        try:
+            menu_state = dlgio.state[Menu.KEY]
+            variants = menu_state['variants']
+            question_func = menu_state['question_func']
+
+            keyboard, mapping = make_keyboard_and_mapping(variants)
+
+            if dlgio.text in mapping:
+                dlgio.menu_result = mapping[dlgio.text]
+                del dlgio.state[Menu.KEY]
+                return dlgio.menu_result
+            else:
+                # invalid answer:
+                dlgio.next(question_func).reply(Menu.INVALID_ANSWER_MESSAGE, keyboard)
+
+        except (KeyError, ValueError) as e:
+            # if any access error -> fall back to intial_State
+            logging.error('Menu.value error', e)
+            dlgio.next(None)
 
 
 def get_message_handlers(my_globals: dict):

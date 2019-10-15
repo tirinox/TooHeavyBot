@@ -1,15 +1,21 @@
-from msg_io import DialogIO, sentence, require_answer, Menu
+from dialogs.best_weight import *
+from msg_io import *
 
 
 @require_answer
-async def yes_no_decide(io: DialogIO):
+async def main_menu_answer(io: DialogIO):
     result = Menu.value(io)
-    if result is None:
-        return io.next(main_menu).reply("suka! bla!!! ERRRORR")
+    if result == 'ideal_weight':
+        return io.next(best_weight_entry)
     else:
-        return io.next(main_menu).reply(f"<b>OK: {result}</b>")
+        return io.next(main_menu).reply('<b>Извините! Пока не сделано...</b>')
 
 
 @sentence
 async def main_menu(io: DialogIO):
-    return Menu.create(io, yes_no_decide, prompt="Yes or no?", variants=['yes', 'no', 'hz'])
+    return Menu.create(io, main_menu, main_menu_answer,
+                       prompt="Привет! "
+                              "Я робот-тренер и помогу тебе достичь идеального веса "
+                              "(похудеть или набрать массу)!",
+                       variants=[('Мой идеальный вес', 'ideal_weight'),
+                                 ('Процент цели?', 'aim_percent')])
