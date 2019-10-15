@@ -3,7 +3,7 @@ from util import try_parse_float
 
 
 def aim_percent_formula(current, ideal, start):
-    return (current - ideal) / (start - ideal) * 100.0
+    return (1.0 - (current - ideal) / (start - ideal)) * 100.0
 
 
 def weight_format(w):
