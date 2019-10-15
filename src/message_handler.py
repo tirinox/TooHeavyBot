@@ -1,6 +1,7 @@
 from aiogram.types import Message
 from models.profile import Profile
 from aioredis import Redis
+import logging
 from msg_io import DialogIO, NEW_LINE, START_COMMAND, does_require_answer, fname
 
 
@@ -10,6 +11,7 @@ def is_personal_chat(m: Message):
 
 class MessageHandler:
     STATE_FUNCTION_KEY = '__func_state'
+    MAX_JUMPS = 50
 
     def __init__(self, r: Redis, handlers: dict, initial_handler):
         self.redis = r
@@ -48,7 +50,9 @@ class MessageHandler:
 
         io_obj = DialogIO(message, profile, message.text, dialog_state)
         all_reply_texts = []
-        while True:
+
+        jump_no = 0
+        while jump_no < self.MAX_JUMPS:
             await handler(io_obj)
 
             dialog_state = io_obj.state
@@ -62,6 +66,10 @@ class MessageHandler:
 
             if does_require_answer(handler):
                 break
+
+            jump_no += 1
+        else:
+            logging.error(f'handle recursion detected! last state: {dialog_state[self.STATE_FUNCTION_KEY]}')
 
         await profile.set_dialog_state(dialog_state)
 

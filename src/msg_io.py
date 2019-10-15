@@ -110,7 +110,7 @@ class Menu:
             'question_func': fname(question_func),
         }
 
-        keyboard, _ = make_keyboard_and_mapping(variants)
+        keyboard, _ = make_keyboard_and_mapping(variants, row_width=1)
         return dlgio.next(answer_func).reply(prompt, keyboard)
 
     @staticmethod
