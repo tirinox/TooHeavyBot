@@ -1,4 +1,5 @@
 from dialogs.best_weight import *
+from dialogs.aim_percent import *
 from msg_io import *
 
 
@@ -8,7 +9,7 @@ async def main_menu_answer(io: DialogIO):
     if result == 'ideal_weight':
         return io.next(best_weight_entry)
     else:
-        return io.next(main_menu).reply('<b>Извините! Пока не сделано...</b>')
+        return io.next(aim_percent_entry)
 
 
 @sentence

@@ -79,6 +79,8 @@ async def answer_aim_menu(io: DialogIO):
         io.next(ask_weight_start)
     elif value == 'change_aim_weight':
         io.next(ask_weight_aim)
+    else:
+        io.next(None)
 
 
 @sentence
@@ -93,9 +95,13 @@ async def ask_aim_menu(io: DialogIO):
         return io.next(ask_weight_aim)
 
     Menu.create(io, ask_aim_menu, answer_aim_menu, "Выберите:", variants=[
-        [('Внести вес сегодня', 'enter_today_weight')],
-        [(f'Изменить старт ({weight_format(weight_start)} кг)', 'change_start_weight')],
-        [(f'Внести вес сегодня ({weight_format(weight_aim)} кг)', 'change_aim_weight')]
+        [
+            ('Внести вес сегодня', 'enter_today_weight'), ('Назад', 'back')
+        ],
+        [
+            (f'Изменить старт ({weight_format(weight_start)} кг)', 'change_start_weight'),
+            (f'Внести вес сегодня ({weight_format(weight_aim)} кг)', 'change_aim_weight')
+        ],
     ])
 
 

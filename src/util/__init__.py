@@ -7,6 +7,6 @@ def try_parse_int(o, default_value=None):
 
 def try_parse_float(o, default_value=None):
     try:
-        return try_parse_float(o)
+        return float(o)
     except (ValueError, TypeError):
         return default_value
