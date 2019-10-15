@@ -3,6 +3,7 @@ from util.config import Config
 from util.database import get_db
 import logging
 from dialogs import *
+from msg_io import get_message_handlers
 from message_handler import MessageHandler
 import asyncio
 
@@ -20,7 +21,8 @@ if __name__ == '__main__':
         redis = await get_db()
     asyncio.get_event_loop().run_until_complete(database())
 
-    message_handler = MessageHandler(redis, initial_handler=ENTRY_POINT)
+    handlers = get_message_handlers(globals())
+    message_handler = MessageHandler(redis, handlers, initial_handler=ENTRY_POINT)
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):

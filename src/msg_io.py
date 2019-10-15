@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from models.profile import Profile
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from typing import Union
@@ -32,30 +32,27 @@ def is_sentence(o):
     return hasattr(o, 'this_is_dialog_sentence')
 
 
-def register_global(name, value):
-    globals()[name] = value
-
-
 @dataclass
-class Input:
+class DialogIO:
     message: Message
     profile: Profile
     text: str
-    param: object = None
+    state: dict = field(default_factory={})
 
-
-@dataclass
-class Output:
-    new_state: object = None
-    reply_text: str = None
-    keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
+    out_keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
+    out_next_func: object = None
+    out_text: str = None
     join_messages: bool = True
-    param: object = None
 
+    def reply(self, text: str, keyboard=None):
+        self.out_text = text
+        if keyboard:
+            self.out_keyboard = keyboard
+        return self
 
-B = KeyboardButton
-KB = ReplyKeyboardMarkup
-KBRemove = ReplyKeyboardRemove
+    def next(self, next_func: callable):
+        self.out_next_func = next_func
+        return self
 
 
 def make_keyboard_and_mapping(variants: list, **kwargs):
@@ -83,28 +80,24 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
 
 
-class Menu(Output):
+class Menu:
+    MENU_MAPPING_KEY = '_menu_map'
     INVALID_ANSWER_MESSAGE = "<pre>wrong answer!</pre>"
 
-    def __init__(self, unique_name, prompt, variants, success_state, **kwargs):
-        self.prompt = prompt
-        self.keyboard, self.mapper = make_keyboard_and_mapping(variants, **kwargs)
-        self.success_state = success_state
+    @staticmethod
+    def create(input: DialogIO, next_func, prompt, variants):
+        keyboard, mapping = make_keyboard_and_mapping(variants)
+        input.state[Menu.MENU_MAPPING_KEY] = mapping
+        return input.next(next_func).reply(prompt, keyboard)
 
-        @sentence
-        async def asker(_):
-            return Output(answerer, prompt, self.keyboard, **kwargs)
+    @staticmethod
+    def value(input: DialogIO):
+        key = Menu.MENU_MAPPING_KEY
+        if isinstance(input.state, dict) and key in input.state and input.text in input.state[key]:
+            value = input.state[key][input.text]
+            del input.state[key]
+            return value
 
-        asker.__name__ = unique_name + '_in'
 
-        @require_answer
-        async def answerer(input: Input):
-            text = input.text
-            if text in self.mapper:
-                return Output(success_state, param=self.mapper[text])
-            else:
-                return Output(asker, self.INVALID_ANSWER_MESSAGE)
-
-        answerer.__name__ = unique_name + '_out'
-        self.new_state = asker
-
+def get_message_handlers(my_globals: dict):
+    return {name: func for name, func in my_globals.items() if is_sentence(func)}

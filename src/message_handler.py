@@ -1,7 +1,7 @@
 from aiogram.types import Message
 from models.profile import Profile
 from aioredis import Redis
-from msg_io import Input, Output, NEW_LINE, START_COMMAND, does_require_answer, fname
+from msg_io import DialogIO, NEW_LINE, START_COMMAND, does_require_answer, fname
 
 
 def is_personal_chat(m: Message):
@@ -9,19 +9,32 @@ def is_personal_chat(m: Message):
 
 
 class MessageHandler:
-    def __init__(self, r: Redis, initial_handler):
+    STATE_FUNCTION_KEY = '__func_state'
+
+    def __init__(self, r: Redis, handlers: dict, initial_handler):
         self.redis = r
+
+        assert handlers
+        self.handlers = handlers
+
         assert initial_handler
         self.initial_handler = initial_handler
-        self.handlers = {fname(initial_handler): initial_handler}
 
     async def handle_start(self, code):
         return None
 
-    def get_handler(self, state):
-        if state is None or state not in self.handlers:
+    async def check_if_start(self, message: Message):
+        text = str(message.text)
+        if text.startswith(START_COMMAND):
+            code = text[len(START_COMMAND):].strip()
+            state_name = await self.handle_start(code)
+            return state_name
+
+    def get_handler(self, state: dict):
+        handler_name = state.get(self.STATE_FUNCTION_KEY, None)
+        if not handler_name or handler_name not in self.handlers:
             return self.initial_handler
-        return self.handlers[state]
+        return self.handlers[handler_name]
 
     async def handle(self, message: Message):
         # only personal chats
@@ -29,50 +42,35 @@ class MessageHandler:
             return
 
         profile = Profile(self.redis, message.from_user.id)
-        state_name = await profile.dialog_state()
+        dialog_state = await profile.dialog_state()
 
-        text = str(message.text)
-        if text.startswith(START_COMMAND):
-            code = text[len(START_COMMAND):].strip()
-            state_name = await self.handle_start(code)
+        handler = self.get_handler(dialog_state)
 
-        handler = self.get_handler(state_name)
-        param = None
-
-        outputs = []
+        io_obj = DialogIO(message, profile, message.text, dialog_state)
+        all_reply_texts = []
         while True:
-            output = await handler(Input(message, profile, text, param))
-            if isinstance(output, tuple):
-                output = Output(*output)
+            await handler(io_obj)
 
-            param = output.param
+            dialog_state = io_obj.state
 
-            if output.reply_text is not None:
-                outputs.append(output)
+            if io_obj.out_text:
+                all_reply_texts.append(io_obj.out_text)
 
-            new_state = output.new_state
-            assert callable(new_state)
+            assert callable(io_obj.out_next_func)
 
-            state_name = fname(new_state)
+            dialog_state[self.STATE_FUNCTION_KEY] = fname(io_obj.out_next_func)
 
-            if state_name not in self.handlers:
-                self.handlers[state_name] = new_state
-
-            handler = self.get_handler(state_name)
+            handler = self.get_handler(dialog_state)
 
             if does_require_answer(handler):
                 break
 
-        await profile.set_dialog_state(state_name)
+        await profile.set_dialog_state(dialog_state)
 
-        if outputs:
-            reply_messages = (output.reply_text for output in outputs if output.reply_text is not None)
-
-            last_output = outputs[-1]  # type: Output
-            if last_output.join_messages:
-                all_reply_text = NEW_LINE.join(reply_messages)
-                if all_reply_text:
-                    await message.reply(all_reply_text, reply=False, reply_markup=last_output.keyboard)
+        if all_reply_texts:
+            if io_obj.join_messages:
+                text_sum = NEW_LINE.join(all_reply_texts)
+                await message.reply(text_sum, reply=False, reply_markup=io_obj.out_keyboard)
             else:
-                for reply_text in reply_messages:
-                    await message.reply(reply_text, reply=False, reply_markup=last_output.keyboard)
+                for reply_text in all_reply_texts:
+                    await message.reply(reply_text, reply=False, reply_markup=io_obj.out_keyboard)
