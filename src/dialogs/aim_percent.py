@@ -14,7 +14,7 @@ def weight_format(w):
 @require_answer
 async def answer_current_weight(io: DialogIO):
     try:
-        weight = int(io.text)
+        weight = float(io.text)
         assert 10 <= weight <= 500
         await io.profile.set_prop('weight_today', weight)
 
@@ -39,7 +39,7 @@ async def ask_current_weight(io: DialogIO):
 @require_answer
 async def answer_weight_start(io: DialogIO):
     try:
-        weight = int(io.text)
+        weight = float(io.text)
         assert 10 <= weight <= 500
         await io.profile.set_prop('weight_start', weight)
         io.next(ask_aim_menu)
@@ -56,7 +56,7 @@ async def ask_weight_start(io: DialogIO):
 @require_answer
 async def answer_weight_aim(io: DialogIO):
     try:
-        weight = int(io.text)
+        weight = float(io.text)
         assert 10 <= weight <= 500
         await io.profile.set_prop('weight_aim', weight)
         io.next(ask_aim_menu)

@@ -16,7 +16,7 @@ class Profile(ModelBase):
         if as_json:
             try:
                 return json.loads(result)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, TypeError):
                 return {}
         else:
             return result
