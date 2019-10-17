@@ -30,4 +30,7 @@ class Profile(ModelBase):
         return await self.get_prop('state', as_json=True)
 
     async def set_dialog_state(self, state):
-        return await self.set_prop('state', state)
+        if state is None:
+            return await self.r.delete(key=self.key_for_prop('state'))
+        else:
+            return await self.set_prop('state', state)

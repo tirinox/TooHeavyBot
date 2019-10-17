@@ -2,7 +2,7 @@ from aiogram.types import Message
 from models.profile import Profile
 from aioredis import Redis
 import logging
-from msg_io import DialogIO, NEW_LINE, START_COMMAND, does_require_answer, fname
+from msg_io import *
 
 
 def is_personal_chat(m: Message):
@@ -10,7 +10,6 @@ def is_personal_chat(m: Message):
 
 
 class MessageHandler:
-    STATE_FUNCTION_KEY = '__func_state'
     MAX_JUMPS = 50
 
     def __init__(self, r: Redis, handlers: dict, initial_handler):
@@ -32,21 +31,19 @@ class MessageHandler:
             state_name = await self.handle_start(code)
             return state_name
 
-    def get_handler(self, state: dict):
-        handler_name = state.get(self.STATE_FUNCTION_KEY, None)
+    def find_handler(self, state: dict):
+        handler_name = state.get(CURRENT_FUNCTION_KEY, None)
+
         if not handler_name or handler_name not in self.handlers:
+            state[CURRENT_FUNCTION_KEY] = fname(self.initial_handler)
             return self.initial_handler
         return self.handlers[handler_name]
 
     async def handle(self, message: Message):
-        # only personal chats
-        if not is_personal_chat(message):
-            return
-
         profile = Profile(self.redis, message.from_user.id)
         dialog_state = await profile.dialog_state()
 
-        handler = self.get_handler(dialog_state)
+        handler = self.find_handler(dialog_state)
 
         io_obj = DialogIO(message, profile, message.text, dialog_state)
         all_reply_texts = []
@@ -60,16 +57,14 @@ class MessageHandler:
             if io_obj.out_text:
                 all_reply_texts.append(io_obj.out_text)
 
-            dialog_state[self.STATE_FUNCTION_KEY] = fname(io_obj.out_next_func)
-
-            handler = self.get_handler(dialog_state)
+            handler = self.find_handler(dialog_state)
 
             if does_require_answer(handler):
                 break
 
             jump_no += 1
         else:
-            logging.error(f'handle recursion detected! last state: {dialog_state[self.STATE_FUNCTION_KEY]}')
+            logging.error(f'handle recursion detected!')
 
         await profile.set_dialog_state(dialog_state)
 

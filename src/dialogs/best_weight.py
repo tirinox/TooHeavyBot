@@ -17,7 +17,7 @@ async def answer_height(io: DialogIO):
         sex = io.state['sex']
 
         result = best_weight_formula(height, sex)
-        io.reply(f'Ваш идеальный вес: {result} кг').next(None)
+        io.reply(f'Ваш идеальный вес: {result} кг').back()
 
     except (ValueError, AssertionError):
         io.reply('Должно быть число от 50 до 300!').next(ask_height)

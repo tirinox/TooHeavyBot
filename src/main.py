@@ -4,7 +4,7 @@ from util.database import get_db
 import logging
 from dialogs import *
 from msg_io import get_message_handlers
-from message_handler import MessageHandler
+from message_handler import MessageHandler, is_personal_chat
 import asyncio
 
 
@@ -26,6 +26,10 @@ if __name__ == '__main__':
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):
+        # only personal chats
+        if not is_personal_chat(message):
+            return
+
         await message_handler.handle(message)
 
     executor.start_polling(dispatcher, skip_updates=True)
