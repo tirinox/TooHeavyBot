@@ -41,28 +41,6 @@ def is_sentence(o):
     return hasattr(o, 'this_is_dialog_sentence')
 
 
-"""
-
-        if transition == transition.GOTO:
-            logging.info(f'dialog go to {handler_name}; stack is {state[stack_key]}')
-        elif transition == transition.BACK:
-            try:
-                handler_name = state[stack_key].pop()
-            except (AttributeError, IndexError):
-                logging.error('dialog stack is empty!')
-                handler_name = None
-            logging.info(f'dialog back to {handler_name}; stack is {state[stack_key]}')
-        elif transition == transition.PUSH:
-            if stack_key not in state or not isinstance(state[stack_key], list):
-                state[stack_key] = [handler_name]
-            else:
-                state[stack_key].append(handler_name)
-            logging.info(f'dialog push {handler_name}; stack is {state[stack_key]}')
-        elif transition == transition.IGNORE:
-            ...
-"""
-
-
 @dataclass
 class DialogIO:
     message: Message
@@ -75,6 +53,8 @@ class DialogIO:
 
     join_messages: bool = True
 
+    ASKED = '__asked'
+
     def reply(self, text: str, keyboard=None):
         self.out_text = text
         if keyboard:
@@ -85,15 +65,32 @@ class DialogIO:
         self.state[name] = value
         return self
 
+    def ask(self, text: str, keyboard=None):
+        self.set(self.ASKED, True)
+        return self.reply(text, keyboard)
+
+    @property
+    def asked(self):
+        return self.state.get(self.ASKED, False)
+
+    def reset_asked(self):
+        self.state.pop(self.ASKED, None)
+        return self
+
+    def get(self, name):
+        return self.state.get(name, None)
+
     def next(self, next_func):
         next_func = fname(next_func)
         self.state[CURRENT_FUNCTION_KEY] = next_func
+        self.reset_asked()
 
         logging.info(f'dialog next {next_func}; stack is {self.state[STATE_STACK_KEY]}')
 
         return self
 
     def reset(self):
+        self.reset_asked()
         self.state[STATE_STACK_KEY] = []
         self.state[CURRENT_FUNCTION_KEY] = "?"
         return self
@@ -104,6 +101,7 @@ class DialogIO:
         if not isinstance(stack, list):
             stack = []
 
+        self.reset_asked()
         stack.append(self.state[CURRENT_FUNCTION_KEY])
         self.state[STATE_STACK_KEY] = stack
         self.state[CURRENT_FUNCTION_KEY] = next_func
@@ -116,13 +114,13 @@ class DialogIO:
         try:
             stack = self.state[STATE_STACK_KEY]
             handler_name = stack.pop()
+            logging.info(f'dialog back to {handler_name}; stack is {stack}')
+            self.reset_asked()
         except (AttributeError, IndexError):
             logging.error('dialog stack is empty!')
             handler_name = "?"
 
         self.state[CURRENT_FUNCTION_KEY] = handler_name
-
-        logging.info(f'dialog back to {handler_name}; stack is {stack}')
 
         return self
 
@@ -163,45 +161,23 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
 
 
-class Menu:
-    KEY = '_menu'
+def create_menu(io: DialogIO, prompt, variants):
+    INVALID_MENU_OPTION_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
 
-    INVALID_ANSWER_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
+    variants = normalize_variants(variants)
+    keyboard, mapping = make_keyboard_and_mapping(variants, row_width=1)
 
-    @staticmethod
-    def create(dlgio: DialogIO, question_func, answer_func, prompt, variants):
-        variants = normalize_variants(variants)
-
-        dlgio.state[Menu.KEY] = {
-            'variants': variants,
-            'question_func': fname(question_func),
-        }
-
-        keyboard, _ = make_keyboard_and_mapping(variants, row_width=1)
-        return dlgio.push(answer_func).reply(prompt, keyboard)
-
-    @staticmethod
-    def value(dlgio: DialogIO):
-        try:
-            menu_state = dlgio.state[Menu.KEY]
-            variants = menu_state['variants']
-            question_func = menu_state['question_func']
-
-            keyboard, mapping = make_keyboard_and_mapping(variants)
-
-            if dlgio.text in mapping:
-                dlgio.menu_result = mapping[dlgio.text]
-                del dlgio.state[Menu.KEY]
-                return dlgio.menu_result
-            else:
-                # invalid answer:
-                dlgio.next(question_func).reply(Menu.INVALID_ANSWER_MESSAGE, keyboard)
-
-        except (KeyError, ValueError) as e:
-            # if any access error -> fall back to intial_State
-            logging.error('Menu.value error', e)
-            dlgio.next(None)
-
+    if io.asked:
+        if io.text in mapping:
+            io.reset_asked()
+            return mapping[io.text]
+        else:
+            # invalid answer:
+            io.reply(INVALID_MENU_OPTION_MESSAGE, keyboard)
+    else:
+        # no menu installed
+        io.ask(prompt, keyboard)
+        return False
 
 def get_message_handlers(my_globals: dict):
     return {fname(func): func for _, func in my_globals.items() if is_sentence(func)}

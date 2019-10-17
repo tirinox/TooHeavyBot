@@ -59,7 +59,7 @@ class MessageHandler:
 
             handler = self.find_handler(dialog_state)
 
-            if does_require_answer(handler):
+            if io_obj.asked:
                 break
 
             jump_no += 1
