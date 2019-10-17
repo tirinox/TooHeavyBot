@@ -14,6 +14,10 @@ STATE_STACK_KEY = '__stack'
 
 DIALOG_PREFIX = 'dialogs.'
 
+# fixme: move to translations!
+INVALID_MENU_OPTION_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
+INVALID_NUMBER_MESSAGE = "<pre>Плохое число!</pre>"
+
 
 def fname(f):
     name = f.__module__ + '.' + f.__qualname__ if callable(f) else str(f)
@@ -22,23 +26,17 @@ def fname(f):
     return name
 
 
-def require_answer(f):
-    f = sentence(f)
-    f.this_requires_answer = True
-    return f
-
-
 def sentence(f):
     f.this_is_dialog_sentence = True
     return f
 
 
-def does_require_answer(o):
-    return hasattr(o, 'this_requires_answer')
-
-
 def is_sentence(o):
     return hasattr(o, 'this_is_dialog_sentence')
+
+
+def get_message_handlers(my_globals: dict):
+    return {fname(func): func for _, func in my_globals.items() if is_sentence(func)}
 
 
 @dataclass
@@ -161,9 +159,7 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
 
 
-def create_menu(io: DialogIO, prompt, variants):
-    INVALID_MENU_OPTION_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
-
+def create_menu(io: DialogIO, prompt, variants, error_msg=INVALID_MENU_OPTION_MESSAGE):
     variants = normalize_variants(variants)
     keyboard, mapping = make_keyboard_and_mapping(variants, row_width=1)
 
@@ -173,11 +169,26 @@ def create_menu(io: DialogIO, prompt, variants):
             return mapping[io.text]
         else:
             # invalid answer:
-            io.reply(INVALID_MENU_OPTION_MESSAGE, keyboard)
+            io.reply(error_msg, keyboard)
     else:
         # no menu installed
         io.ask(prompt, keyboard)
         return False
 
-def get_message_handlers(my_globals: dict):
-    return {fname(func): func for _, func in my_globals.items() if is_sentence(func)}
+
+def ask_for_number(io: DialogIO,
+                   prompt,
+                   min_value=float('-inf'),
+                   max_value=float('+inf'),
+                   error_msg=INVALID_NUMBER_MESSAGE):
+    if io.asked:
+        try:
+            text = io.text.replace(',', '.').replace(' ', '')
+            number = float(text)
+            assert min_value <= number <= max_value
+            io.reset_asked()
+            return number
+        except (AssertionError, ValueError):
+            io.ask(error_msg)
+    else:
+        io.ask(prompt)

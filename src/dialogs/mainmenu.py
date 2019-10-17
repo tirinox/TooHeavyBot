@@ -13,7 +13,4 @@ async def main_menu(io: DialogIO):
     if result == 'ideal_weight':
         return io.push(best_weight_entry)
     elif result == 'aim_percent':
-        # return io.push(aim_percent_entry)
-        return io.ask('not implemented!')
-
-
+        return io.push(aim_percent_entry)
