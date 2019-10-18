@@ -18,15 +18,17 @@ class MessageHandler:
         assert initial_handler
         self.initial_handler = initial_handler
 
-    async def handle_start(self, code):
-        return None
+    async def handle_start(self, io: DialogIO, code: str):
+        ...
 
-    async def check_if_start(self, message: Message):
-        text = str(message.text)
+    async def check_if_command(self, io: DialogIO):
+        text = str(io.text)
         if text.startswith(START_COMMAND):
             code = text[len(START_COMMAND):].strip()
-            state_name = await self.handle_start(code)
-            return state_name
+            await self.handle_start(io, code)
+        elif text.startswith(RESET_COMMAND):
+            io.state = {}
+            await io.message.reply('RESET DONE!')
 
     def find_handler(self, state: dict):
         handler_name = state.get(CURRENT_FUNCTION_KEY, None)
@@ -40,21 +42,22 @@ class MessageHandler:
         profile = Profile(message.from_user.id)
         dialog_state = await profile.dialog_state()
 
-        handler = self.find_handler(dialog_state)
-
         io_obj = DialogIO(message, profile, message.text, dialog_state)
+
+        await self.check_if_command(io_obj)
+
         all_reply_texts = []
+
+        handler = self.find_handler(dialog_state)
 
         jump_no = 0
         while jump_no < self.MAX_JUMPS:
             await handler(io_obj)
 
-            dialog_state = io_obj.state
-
             if io_obj.out_text:
                 all_reply_texts.append(io_obj.out_text)
 
-            handler = self.find_handler(dialog_state)
+            handler = self.find_handler(io_obj.state)
 
             if io_obj.asked:
                 break

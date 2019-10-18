@@ -8,6 +8,7 @@ import logging
 NEW_LINE = '\n'
 
 START_COMMAND = '/start'
+RESET_COMMAND = '/reset'
 
 CURRENT_FUNCTION_KEY = '__func_state'
 STATE_STACK_KEY = '__stack'
