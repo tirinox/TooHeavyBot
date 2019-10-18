@@ -21,3 +21,11 @@ class ModelBase:
 
     def key(self, *args):
         return key(self.__class__.__name__, *args)
+
+
+async def scan(r: aioredis.Redis, match='*'):
+    cur = b'0'
+    while cur:
+        cur, keys = await r.scan(cur, match)
+        for k in keys:
+            yield k

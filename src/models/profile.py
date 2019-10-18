@@ -1,5 +1,5 @@
 from aioredis import Redis
-from util.database import ModelBase
+from util.database import ModelBase, scan
 import json
 
 
@@ -34,3 +34,7 @@ class Profile(ModelBase):
             return await self.r.delete(key=self.key_for_prop('state'))
         else:
             return await self.set_prop('state', state)
+
+    async def delete(self):
+        async for key in scan(self.r, self.key_for_prop('*')):
+            await self.r.delete(key)
