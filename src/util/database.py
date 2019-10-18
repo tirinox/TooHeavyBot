@@ -1,31 +1,35 @@
 import aioredis
 from util.config import Config
+from util.singleton import Singleton
 
 
-async def get_db_by_url(url):
-    return await aioredis.create_redis_pool(url, encoding='utf-8')
+class DB(metaclass=Singleton):
+    def __init__(self):
+        self._redis = None
+        self._redis_url = Config().get('db.redis.url')
 
+    async def connect(self):
+        if not self._redis:
+            self._redis = await aioredis.create_redis_pool(self._redis_url, encoding='utf-8')
 
-async def get_db():
-    url = Config().get('db.redis.url')
-    return await get_db_by_url(url)
+    async def scan(self, match='*'):
+        cur = b'0'
+        while cur:
+            cur, keys = await self.redis.scan(cur, match)
+            for k in keys:
+                yield k
 
+    @property
+    def redis(self) -> aioredis.Redis:
+        return self._redis
 
-def key(*args):
-    return ':'.join(map(str, args))
+    @staticmethod
+    def key(*args):
+        return ':'.join(map(str, args))
 
 
 class ModelBase:
-    def __init__(self, r: aioredis.Redis):
-        self.r = r
-
     def key(self, *args):
-        return key(self.__class__.__name__, *args)
+        return DB.key(self.__class__.__name__, *args)
 
 
-async def scan(r: aioredis.Redis, match='*'):
-    cur = b'0'
-    while cur:
-        cur, keys = await r.scan(cur, match)
-        for k in keys:
-            yield k

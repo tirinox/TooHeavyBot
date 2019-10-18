@@ -1,7 +1,7 @@
 import typing
 
 from util.config import Config
-from util.database import get_db
+from util.database import DB
 import logging
 from unittest.mock import MagicMock
 from dialogs import *
@@ -52,7 +52,7 @@ async def repl_loop(message_handler: MessageHandler):
             break
 
         if text_message == '/reset':
-            await Profile(message_handler.redis, USER_ID).set_dialog_state(None)
+            await Profile(USER_ID).set_dialog_state(None)
             continue
 
         # translate number to actual item text
@@ -76,14 +76,11 @@ if __name__ == '__main__':
     config = Config()
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)
 
-    async def database():
-        global redis
-        redis = await get_db()
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(database())
+    loop.run_until_complete(DB().connect())
 
     handlers = get_message_handlers(globals())
-    message_handler = MessageHandler(redis, handlers, initial_handler=ENTRY_POINT)
+    message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)
 
     loop.run_until_complete(repl_loop(message_handler))

@@ -1,7 +1,5 @@
-from models.base import Base
-from dataclasses import dataclass
+from util.database import DB, ModelBase
 
 
-@dataclass
-class TimePoint(Base):
+class TimePoint(ModelBase):
     date: int = 0

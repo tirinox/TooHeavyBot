@@ -46,12 +46,10 @@ async def ask_aim_menu(io: DialogIO):
     weight_start = try_parse_float(await io.profile.get_prop('weight_start'))
 
     if not weight_start:
-        print('ask_weight_start')
         return io.push(ask_weight_start)
 
     weight_aim = try_parse_float(await io.profile.get_prop('weight_aim'))
     if not weight_aim:
-        print('ask_weight_aim')
         return io.push(ask_weight_aim)
 
     result = create_menu(io, "Мы посчитаем процент вашего прогресса:", variants=[

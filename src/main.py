@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher, executor, types
 from util.config import Config
-from util.database import get_db
+from util.database import DB
 import logging
 from dialogs import *
 from msg_io import get_message_handlers
@@ -16,13 +16,10 @@ if __name__ == '__main__':
     bot = Bot(token, parse_mode=types.ParseMode.HTML)
     dispatcher = Dispatcher(bot)
 
-    async def database():
-        global redis
-        redis = await get_db()
-    asyncio.get_event_loop().run_until_complete(database())
+    asyncio.get_event_loop().run_until_complete(DB().connect())
 
     handlers = get_message_handlers(globals())
-    message_handler = MessageHandler(redis, handlers, initial_handler=ENTRY_POINT)
+    message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):

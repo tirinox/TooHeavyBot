@@ -1,6 +1,5 @@
 from aiogram.types import Message
 from models.profile import Profile
-from aioredis import Redis
 import logging
 from msg_io import *
 
@@ -12,9 +11,7 @@ def is_personal_chat(m: Message):
 class MessageHandler:
     MAX_JUMPS = 50
 
-    def __init__(self, r: Redis, handlers: dict, initial_handler):
-        self.redis = r
-
+    def __init__(self, handlers: dict, initial_handler):
         assert handlers
         self.handlers = handlers
 
@@ -40,7 +37,7 @@ class MessageHandler:
         return self.handlers[handler_name]
 
     async def handle(self, message: Message):
-        profile = Profile(self.redis, message.from_user.id)
+        profile = Profile(message.from_user.id)
         dialog_state = await profile.dialog_state()
 
         handler = self.find_handler(dialog_state)

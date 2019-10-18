@@ -10,19 +10,13 @@ def best_weight_formula(height, sex):
 
 @sentence
 async def ask_height(io: DialogIO):
-    if not io.asked:
-        io.ask('Ваш рост в сантиметрах?')
-    else:
-        try:
-            height = int(io.text)
-            assert 50 <= height <= 300
+    height = ask_for_number(io, 'Ваш рост в сантиметрах?', 50, 300,
+                      error_msg='Должно быть число от 50 до 300!')
 
-            sex = io.state['sex']
-
-            result = best_weight_formula(height, sex)
-            io.reply(f'Ваш идеальный вес: {result} кг').back()
-        except (ValueError, AssertionError):
-            io.ask('Должно быть число от 50 до 300!')
+    if height:
+        sex = io.state['sex']
+        result = best_weight_formula(height, sex)
+        io.reply(f'Ваш идеальный вес: {result} кг').back()
 
 
 @sentence
