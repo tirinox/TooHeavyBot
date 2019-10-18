@@ -3,8 +3,8 @@ import json
 
 
 class Profile(ModelBase):
-    def __init__(self,used_id):
-        self.user_id = used_id
+    def __init__(self,user_id):
+        self.user_id = user_id
 
     def key_for_prop(self, prop):
         return self.key(self.user_id, prop)
