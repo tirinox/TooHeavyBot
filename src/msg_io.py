@@ -55,7 +55,7 @@ class DialogIO:
     ASKED = '__asked'
 
     def reply(self, text: str, keyboard=None):
-        self.out_text = self.out_text + NEW_LINE + text if self.out_text else text
+        self.out_text = text
         if keyboard:
             self.out_keyboard = keyboard
         return self
