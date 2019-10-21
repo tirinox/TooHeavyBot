@@ -14,10 +14,11 @@ class DB(metaclass=Singleton):
 
     async def scan(self, match='*'):
         cur = b'0'
+        results = []
         while cur:
             cur, keys = await self.redis.scan(cur, match)
-            for k in keys:
-                yield k
+            results += keys
+        return results
 
     @property
     def redis(self) -> aioredis.Redis:

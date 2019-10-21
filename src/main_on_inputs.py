@@ -40,6 +40,18 @@ class FakeMessage(Message):
         return self
 
 
+async def print_database(request=''):
+    if not request:
+        request = '*'
+    print('-' * 100)
+    print('request: ', request)
+    keys = await DB().scan(request)
+    for key in keys:
+        value = await DB().redis.get(key)
+        print(key, '=>', value)
+    print('-' * 100)
+
+
 async def repl_loop(message_handler: MessageHandler):
     USER_ID = 101
 
@@ -53,6 +65,10 @@ async def repl_loop(message_handler: MessageHandler):
 
         if text_message == '/reset':
             await Profile(USER_ID).set_dialog_state(None)
+            continue
+
+        if text_message.startswith('/dbs'):
+            await print_database(text_message[4:].strip())
             continue
 
         # translate number to actual item text
