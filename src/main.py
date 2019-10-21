@@ -6,6 +6,7 @@ from dialogs import *
 from msg_io import get_message_handlers
 from message_handler import MessageHandler, is_personal_chat
 import asyncio
+from tasks import task_manager
 
 
 if __name__ == '__main__':
@@ -16,7 +17,9 @@ if __name__ == '__main__':
     bot = Bot(token, parse_mode=types.ParseMode.HTML)
     dispatcher = Dispatcher(bot)
 
-    asyncio.get_event_loop().run_until_complete(DB().connect())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(DB().connect())
+    task_manager.run_on_loop(loop)
 
     handlers = get_message_handlers(globals())
     message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)

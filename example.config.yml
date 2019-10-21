@@ -10,3 +10,6 @@ db:
 
 # set false for production!
 debug: true
+
+periodic:
+  period: 1m

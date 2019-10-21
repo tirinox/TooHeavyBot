@@ -1,27 +1,22 @@
-import typing
-
 from util.config import Config
 from util.database import DB
-import logging
 from unittest.mock import MagicMock
 from dialogs import *
 from msg_io import get_message_handlers
 from message_handler import MessageHandler
 import asyncio
-from aiogram.types import Message, base, InlineKeyboardMarkup, ForceReply
+from aiogram.types import Message
+from tasks import task_manager
 
 
 last_keyboard_anwer_map = {}
 
 
 class FakeMessage(Message):
-    async def reply(self, text: base.String, parse_mode: typing.Union[base.String, None] = None,
-                    disable_web_page_preview: typing.Union[base.Boolean, None] = None,
-                    disable_notification: typing.Union[base.Boolean, None] = None,
-                    reply_markup: typing.Union[InlineKeyboardMarkup,
-                                               ReplyKeyboardMarkup,
-                                               ReplyKeyboardRemove,
-                                               ForceReply, None] = None, reply: base.Boolean = True) -> Message:
+    async def reply(self, text, parse_mode=None,
+                    disable_web_page_preview=None,
+                    disable_notification=None,
+                    reply_markup=None, reply=True) -> Message:
 
         # it know that globals is bad, but for local test it's OK!
         global last_keyboard_anwer_map
@@ -92,9 +87,10 @@ if __name__ == '__main__':
     config = Config()
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)
 
-
     loop = asyncio.get_event_loop()
     loop.run_until_complete(DB().connect())
+
+    task_manager.run_on_loop(loop)
 
     handlers = get_message_handlers(globals())
     message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)

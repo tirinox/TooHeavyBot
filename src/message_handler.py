@@ -1,6 +1,3 @@
-from aiogram.types import Message
-from models.profile import Profile
-import logging
 from msg_io import *
 
 
