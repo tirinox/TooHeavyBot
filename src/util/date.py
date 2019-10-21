@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 MINUTE = 60
@@ -115,3 +115,31 @@ def format_time_ago(d):
         return 'never'
     else:
         return f'{seconds_human(now_ts() - d)} ago'
+
+
+def hour_and_min_from_str(s):
+    hh, mm = s.strip().split(':')
+    hh, mm = int(hh), int(mm)
+
+    assert 0 <= hh < 24
+    assert 0 <= mm < 60
+
+    return hh, mm
+
+
+def estimate_time_shift_from_server_to_user(hh, mm):
+    """
+    If it's negative means usually server is west of user
+    :param hh: hours
+    :param mm: minutes
+    :return: minutes of shift (rounded to 30)
+    """
+    now = datetime.now()
+    my_hh, my_mm = now.hour, now.minute
+
+    diff = ((my_hh - hh) * 60 + my_mm - mm) / 30.0
+    return int(round(diff) * 30.0)
+
+
+def time_of_user(time_shift_minutes):
+    return datetime.now() + timedelta(time_shift_minutes)

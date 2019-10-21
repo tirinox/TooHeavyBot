@@ -1,7 +1,9 @@
 from dialogs.best_weight import *
 from dialogs.aim_percent import *
 from msg_io import *
+from util.date import estimate_time_shift_from_server_to_user, hour_and_min_from_str
 from datetime import datetime
+
 
 
 @sentence
@@ -13,19 +15,9 @@ async def ask_time_zone(io: DialogIO):
                'Введите время в формате ЧЧ:ММ - 24 часа.')
     else:
         try:
-            hh, mm = io.text.strip().split(':')
-            hh, mm = int(hh), int(mm)
-
-            assert 0 <= hh < 24
-            assert 0 <= mm < 60
-
-            now = datetime.now()
-            my_hh, my_mm = now.hour, now.minute
-
-            diff = ((my_hh - hh) * 60 + my_mm - mm) / 30.0
-            diff = round(diff) / 2.0
-
-            await io.profile.set_prop('time_zone_offset', diff)
+            hh, mm = hour_and_min_from_str(io.text)
+            shift = estimate_time_shift_from_server_to_user(hh, mm)
+            await io.profile.set_time_shift(shift)
 
             io.back()
         except (AssertionError, ValueError):
@@ -36,7 +28,7 @@ async def ask_time_zone(io: DialogIO):
 async def main_menu(io: DialogIO):
     prompt = """Привет! Я робот-тренер и помогу тебе достичь идеального веса (похудеть или набрать массу)!"""
 
-    timeoffset = await io.profile.get_prop('time_zone_offset')
+    timeoffset = await io.profile.get_time_shift()
     if timeoffset is None:
         return io.push(ask_time_zone)
 

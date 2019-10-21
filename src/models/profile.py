@@ -33,7 +33,14 @@ class Profile(ModelBase):
         else:
             return await self.set_prop('state', state)
 
+    async def set_time_shift(self, timeshift):
+        return await self.set_prop('tz_offset_min', timeshift)
+
+    async def get_time_shift(self):
+        r = await self.get_prop('tz_offset_min')
+        return r if r is None else int(r)
+
     async def delete(self):
         db = DB()
-        async for key in db.scan(self.key_for_prop('*')):
+        for key in await db.scan(self.key_for_prop('*')):
             await db.redis.delete(key)
