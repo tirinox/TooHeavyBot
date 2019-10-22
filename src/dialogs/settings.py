@@ -26,9 +26,12 @@ async def settings_menu(io: DialogIO):
     result = create_menu(io, 'Настройки бота:',
                          variants=[
                              [('Сверить часы', 1)],
+                             [('Напоминание', 2)],
                              [('Назад', 'back')]
                          ])
     if result == 1:
         return io.push(ask_time_zone)
+    elif result == 2:
+        return io.back().reply('Нет еще!!')
     elif result == 'back':
         return io.back()
