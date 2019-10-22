@@ -2,8 +2,8 @@ from util.config import Config
 from util.database import DB
 from unittest.mock import MagicMock
 from dialogs import *
-from msg_io import get_message_handlers
-from message_handler import MessageHandler
+from chat.msg_io import get_message_handlers
+from chat.message_handler import MessageHandler
 import asyncio
 from aiogram.types import Message
 from tasks import task_manager

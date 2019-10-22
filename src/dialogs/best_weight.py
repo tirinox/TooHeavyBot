@@ -1,4 +1,4 @@
-from msg_io import *
+from chat.msg_io import *
 
 
 def best_weight_formula(height, sex):

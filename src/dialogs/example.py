@@ -1,4 +1,4 @@
-from msg_io import DialogIO, sentence, require_answer, Menu
+from chat.msg_io import DialogIO, sentence, require_answer, Menu
 
 
 @require_answer

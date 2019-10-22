@@ -1,4 +1,4 @@
-from msg_io import *
+from chat.msg_io import *
 from util import try_parse_float
 
 

@@ -1,6 +1,6 @@
 from dialogs.best_weight import *
 from dialogs.aim_percent import *
-from msg_io import *
+from chat.msg_io import *
 from util.date import estimate_time_shift_from_server_to_user, hour_and_min_from_str
 from datetime import datetime
 

@@ -1,8 +1,4 @@
-from msg_io import *
-
-
-def is_personal_chat(m: Message):
-    return m.from_user.id == m.chat.id
+from chat.msg_io import *
 
 
 class MessageHandler:
