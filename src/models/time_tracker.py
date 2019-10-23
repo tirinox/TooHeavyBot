@@ -16,3 +16,6 @@ class TimeTracker(ModelBase):
 
     async def unregister_user(self, user_id):
         return await self.redis.srem(self._key, str(user_id))
+
+
+# todo: set default notification time if it's not set

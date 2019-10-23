@@ -23,6 +23,10 @@ def now_ts() -> float:
     return datetime.now().timestamp()   # don't use utcnow() since timestamp() does this conversion
 
 
+def now_tsi() -> int:
+    return int(now_ts())
+
+
 def seconds_diff(t1: datetime, t2: datetime) -> float:
     return (t1 - t2).total_seconds()
 

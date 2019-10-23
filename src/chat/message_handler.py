@@ -60,6 +60,7 @@ class MessageHandler:
             logging.error(f'handle recursion detected!')
 
         await profile.set_dialog_state(dialog_state)
+        await profile.activity()
 
         if all_reply_texts:
             if io_obj.join_messages:

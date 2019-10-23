@@ -1,4 +1,5 @@
 from util.database import ModelBase, DB
+from util.date import now_tsi
 import json
 
 
@@ -44,3 +45,10 @@ class Profile(ModelBase):
     async def delete(self):
         for key in await DB().scan(self.key_for_prop('*')):
             await self.redis.delete(key)
+
+    async def activity(self):
+        return await self.set_prop('last_activity', now_tsi())
+
+    async def get_last_activity_time(self):
+        r = await self.get_prop('last_activity')
+        return 0 if r is None else int(r)
