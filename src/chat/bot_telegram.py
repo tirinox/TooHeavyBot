@@ -22,3 +22,6 @@ class TelegramBot:
 
     def serve(self):
         executor.start_polling(self.dispatcher, skip_updates=True)
+
+    async def send_text(self, user_id, message):
+        return await self.bot.send_message(user_id, message)

@@ -127,7 +127,12 @@ def format_time_ago(d):
 
 
 def hour_and_min_from_str(s):
-    hh, mm = s.strip().split(':')
+    s = s.strip()
+    try:
+        hh, mm = s.split(':')
+    except TypeError:
+        hh, mm = filter(lambda x: x.strip(), s.split(' '))
+
     hh, mm = int(hh), int(mm)
 
     assert 0 <= hh < 24

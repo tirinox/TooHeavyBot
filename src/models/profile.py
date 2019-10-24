@@ -35,8 +35,8 @@ class Profile(ModelBase):
         else:
             return await self.set_prop('state', state)
 
-    async def set_time_shift(self, timeshift):
-        return await self.set_prop('tz_offset_min', timeshift)
+    async def set_time_shift(self, timeshift_min):
+        return await self.set_prop('tz_offset_min', timeshift_min)
 
     async def get_time_shift(self):
         r = await self.get_prop('tz_offset_min')

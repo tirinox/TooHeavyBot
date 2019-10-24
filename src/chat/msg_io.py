@@ -57,6 +57,9 @@ class DialogIO:
     def reply(self, text: str, keyboard=None):
         self.out_text = text
         if keyboard:
+            if type(keyboard) is list:
+                variants = normalize_variants(keyboard)
+                keyboard, _ = make_keyboard_and_mapping(variants, row_width=1)
             self.out_keyboard = keyboard
         return self
 
@@ -109,8 +112,11 @@ class DialogIO:
 
         return self
 
-    def back(self):
+    def back(self, text=None):
         try:
+            if text is not None:
+                self.reply(text)
+
             stack = self.state[STATE_STACK_KEY]
             handler_name = stack.pop()
             logging.info(f'dialog back to {handler_name}; stack is {stack}')

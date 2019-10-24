@@ -13,11 +13,13 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)
 
     loop = asyncio.get_event_loop()
+
     loop.run_until_complete(DB().connect())
-    task_manager.run_on_loop(loop)
 
     handlers = get_message_handlers(globals())
     message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)
-
     bot = TelegramBot(message_handler.handle)
+
+    task_manager.run_on_loop(loop, bot)
+
     bot.serve()

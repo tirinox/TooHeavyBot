@@ -34,3 +34,21 @@ class ModelBase:
         return DB.key(self.__class__.__name__, *args)
 
 
+async def print_database(request=''):
+    if not request:
+        request = '*'
+    print('-' * 100)
+    print('request: ', request)
+    db = DB()
+    keys = await db.scan(request)
+    for key in keys:
+        t = await db.redis.type(key)
+        if t == 'string':
+            value = await db.redis.get(key)
+        elif t == 'set':
+            value = await db.redis.smembers(key)
+        else:
+            value = '???'
+
+        print(f'{key} => ({t}) {value}')
+    print('-' * 100)
