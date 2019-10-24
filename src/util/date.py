@@ -1,5 +1,10 @@
 from datetime import datetime, timedelta
 import time
+import pytz
+import locale
+
+locale.setlocale(locale.LC_TIME, 'ru_RU')
+
 
 MINUTE = 60
 HOUR = 60 * 60
@@ -147,3 +152,65 @@ def estimate_time_shift_from_server_to_user(hh, mm):
 
 def time_of_user(time_shift_minutes):
     return datetime.now() + timedelta(time_shift_minutes)
+
+
+def get_zone_time_shift(tz: pytz.timezone) -> timedelta:
+    null_delta = timedelta(0, 0)
+    non_dst_offset = getattr(tz, '_transition_info', [[null_delta]])[-1]
+    return non_dst_offset[0]
+
+
+def possible_timezones(tz_offset_min, common_only=True):
+    timezones = pytz.common_timezones if common_only else pytz.all_timezones
+
+    # convert the float hours offset to a timedelta
+    offset_days, offset_seconds = 0, int(tz_offset_min * 60)
+    if offset_seconds < 0:
+        offset_days = -1
+        offset_seconds += 24 * 3600
+    desired_delta = timedelta(offset_days, offset_seconds)
+
+    # Loop through the timezones and find any with matching offsets
+    results = []
+    for tz_name in timezones:
+        tz = pytz.timezone(tz_name)
+        if desired_delta == get_zone_time_shift(tz):
+            results.append(tz_name)
+
+    return results
+
+
+def get_possible_shifts(common_only=True):
+    timezones = pytz.common_timezones if common_only else pytz.all_timezones
+
+    shifts = set()
+
+    for tz_name in timezones:
+        tz = pytz.timezone(tz_name)
+        shift = get_zone_time_shift(tz)
+        minutes = int(shift.total_seconds() / 60)
+        shifts.add(minutes)
+
+    shifts_list = list(shifts)
+    shifts_list.sort()
+    return shifts_list
+
+
+POSSIBLE_TIMEZONE_SHIFTS = get_possible_shifts()
+
+
+def date_shift(d: datetime, tz_shift_minutes):
+    timezones_names = possible_timezones(tz_shift_minutes)
+    if not timezones_names:
+        raise ValueError(f'invalid time shift {tz_shift_minutes}; must be one of {POSSIBLE_TIMEZONE_SHIFTS}')
+
+    zone = pytz.timezone(timezones_names[0])
+    their_date = d.astimezone(zone)
+    return their_date
+
+
+DATETIME_FORMAT_TO_SETTING = '%A %H:%M'
+
+
+def format_date_for_tz_selector(d: datetime):
+    return d.strftime(DATETIME_FORMAT_TO_SETTING)

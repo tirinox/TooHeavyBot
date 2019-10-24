@@ -174,7 +174,7 @@ def create_menu(io: DialogIO, prompt, variants, error_msg=INVALID_MENU_OPTION_ME
     else:
         # no menu installed
         io.ask(prompt, keyboard)
-        return False
+        return None
 
 
 def ask_for_number(io: DialogIO,

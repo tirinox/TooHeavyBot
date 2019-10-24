@@ -10,3 +10,9 @@ def try_parse_float(o, default_value=None):
         return float(o)
     except (ValueError, TypeError):
         return default_value
+
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]

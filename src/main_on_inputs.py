@@ -9,6 +9,8 @@ from aiogram.types import Message
 from tasks import task_manager
 
 
+USER_ID = 102
+
 last_keyboard_anwer_map = {}
 
 
@@ -48,8 +50,6 @@ async def print_database(request=''):
 
 
 async def repl_loop(message_handler: MessageHandler):
-    USER_ID = 101
-
     global last_keyboard_anwer_map
 
     while True:

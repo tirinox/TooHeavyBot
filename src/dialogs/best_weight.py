@@ -24,7 +24,7 @@ async def ask_sex(io: DialogIO):
     result = create_menu(io, "Какой ваш пол?", variants=[
         ('Мужской', 'male'), ('Женский', 'female')
     ])
-    if result:
+    if result is not None:
         io.set('sex', result).next(ask_height)
 
 

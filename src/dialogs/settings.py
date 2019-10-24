@@ -1,24 +1,31 @@
 from chat.msg_io import *
-from util.date import estimate_time_shift_from_server_to_user, hour_and_min_from_str
+from util.date import *
+from util import chunks
 from datetime import datetime
 
 
 @sentence
 async def ask_time_zone(io: DialogIO):
-    if not io.asked:
-        now_time = datetime.now().strftime('%H:%M')
-        io.ask(f'У нас сейчас {now_time}.\n'
-               'Сколько у вас сейчас времени?\n'
-               'Введите время в формате ЧЧ:ММ - 24 часа.')
-    else:
-        try:
-            hh, mm = hour_and_min_from_str(io.text)
-            shift = estimate_time_shift_from_server_to_user(hh, mm)
-            await io.profile.set_time_shift(shift)
+    now_time = datetime.now().strftime('%H:%M')
+    prompt = (f'У нас сейчас {now_time}.\n'
+              'Сколько у вас сейчас времени?\n'
+              'Выберите вариант, варианты можно прокручивать:')
 
-            io.reply(f'Наша разница во времени: {shift} минут.').back()
-        except (AssertionError, ValueError):
-            io.ask('Кажется, вы меня не так поняли! Введите время в формате ЧЧ:ММ - 24 часа.')
+    now = datetime.now()
+
+    def shift_to_time(s):
+        their_now = date_shift(now, s)
+        return format_date_for_tz_selector(their_now)
+
+    variants = [(shift_to_time(s), s) for s in POSSIBLE_TIMEZONE_SHIFTS]
+    variants_columned = list(chunks(variants, n=3))
+    result = create_menu(io, prompt, variants_columned)
+
+    if result is not None:
+        print(result, type(result))
+        await io.profile.set_time_shift(result)
+        tz_names = ', '.join(possible_timezones(result))
+        io.reply(f'Часовой пояс установлен: ({tz_names})').back()
 
 
 @sentence
@@ -40,7 +47,7 @@ async def ask_notification_time(io: DialogIO):
 async def settings_menu(io: DialogIO):
     result = create_menu(io, 'Настройки бота:',
                          variants=[
-                             [('Сверить часы', 1)],
+                             [('Часовой пояс', 1)],
                              [('Напоминание', 2)],
                              [('Назад', 'back')]
                          ])

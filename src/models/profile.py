@@ -42,6 +42,12 @@ class Profile(ModelBase):
         r = await self.get_prop('tz_offset_min')
         return r if r is None else int(r)
 
+    async def get_current_timestamp(self):
+        offset = await self.get_time_shift()
+        if offset is None:
+            offset = 0
+        return now_tsi() + int(offset * 60)
+
     async def delete(self):
         for key in await DB().scan(self.key_for_prop('*')):
             await self.redis.delete(key)
