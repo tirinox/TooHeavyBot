@@ -12,7 +12,7 @@ elif [[ "$1" == "logs" ]]; then
 elif [[ "$1" == "restart" ]]; then
     docker restart `docker ps -aqf "name=thb_bot"`
 elif [[ "$1" == "pull" ]]; then
-    git pull
+    git pull origin develop
     docker-compose down
     docker-compose up -d --build
 else
