@@ -32,10 +32,12 @@ class MessageHandler:
         return self.handlers[handler_name]
 
     async def handle(self, message: Message):
+
         profile = Profile(message.from_user.id)
         dialog_state = await profile.dialog_state()
 
         io_obj = DialogIO(message, profile, message.text, dialog_state)
+        io_obj.location = message.location
 
         await self.check_if_command(io_obj)
 

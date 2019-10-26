@@ -1,37 +1,35 @@
 from chat.msg_io import *
 from util.date import *
-from util import chunks
 import pytz
 from tasks.notify_weight import activate_notification, deactivate_notification
 from tasks.change_timezone import change_timezone
+from timezonefinder import TimezoneFinder
+
+tz_finder = TimezoneFinder(in_memory=True)
 
 
 @sentence
 async def ask_time_zone(io: DialogIO):
-    now_dt = now_local_dt()
-
-    now_text = now_dt.strftime('%H:%M')
-    prompt = (f'У нас сейчас {now_text}.\n'
-              'Сколько у вас сейчас времени?\n'
-              'Выберите вариант, варианты можно прокручивать:')
+    prompt = (f'Чтобы вовремя отправлять вам уведомления, нам нужно узнать ваш часовой пояс.\n\n'
+              'Вы может отправить геолокацию, чтобы мы определели часовой пояс. Не обязательно '
+              'отправлять ваш точный адрес. Вы можете отправить любую локацию из вашего часового пояса.')
+              # 'Или вы можете написать название вашего города, чтобы мы поискали в своей базе:')
 
     if not io.asked:
-        io.state['now'] = now_dt.isoformat()
+        io.ask(prompt, [KeyboardButton('📍 Отправить локацию', request_location=True)])
     else:
-        now_dt = datetime.fromisoformat(io.state['now'])
-
-    def format_date(name):
-        their_now = now_dt.astimezone(pytz.timezone(name))
-        return format_date_for_tz_selector(their_now)
-
-    variants = [(format_date(tz_name), tz_name) for tz_name in DIFFERENT_TIMEZONE_NAMES]
-    variants_columned = list(chunks(variants, n=3))
-    result = create_menu(io, prompt, variants_columned)
-
-    if result is not None:
-        print('tz name =', result)
-        await change_timezone(io.profile, result)
-        io.back(f'Часовой пояс установлен.').clear('now')
+        if io.location:
+            tz_name = tz_finder.timezone_at(lng=io.location.longitude, lat=io.location.latitude)
+            try:
+                pytz.timezone(tz_name)
+            except pytz.UnknownTimeZoneError:
+                io.ask('Мы не смогли найти подходящий часовой пояс для вашей локации. '
+                       'Введите название города вручную:')
+            else:
+                await change_timezone(io.profile, tz_name)
+                io.reply(f'Мы установили, что ваш часовой пояс: <b>{tz_name}</b>. Верно?\n').back()
+        else:
+            io.ask('Не знаю такого города...')
 
 
 @sentence

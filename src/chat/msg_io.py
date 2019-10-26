@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from models.profile import Profile
-from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
 from typing import Union
 import logging
 
@@ -46,10 +46,10 @@ class DialogIO:
     profile: Profile
     text: str
     state: dict = field(default_factory={})
+    location: Location = None
 
     out_keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
     out_text: str = None
-
     join_messages: bool = True
 
     ASKED = '__asked'
@@ -163,8 +163,9 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
             kb_row = []
             for elem in row:
                 caption, value = elem
+
                 mapping[caption] = value
-                kb_row.append(KeyboardButton(caption))
+                kb_row.append(caption if isinstance(caption, KeyboardButton) else KeyboardButton(str(caption)))
             keyboard.append(kb_row)
 
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping

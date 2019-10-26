@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.types import ContentTypes
 from util.config import Config
 
 
@@ -12,7 +13,7 @@ class TelegramBot:
         self.bot = Bot(token, parse_mode=types.ParseMode.HTML)
         self.dispatcher = Dispatcher(self.bot)
 
-        @self.dispatcher.message_handler()
+        @self.dispatcher.message_handler(content_types=ContentTypes.ANY)
         async def echo(message: types.Message):
             # only personal chats
             if not TelegramBot.is_personal_chat(message):
