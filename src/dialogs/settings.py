@@ -1,31 +1,37 @@
 from chat.msg_io import *
 from util.date import *
 from util import chunks
-from datetime import datetime
+import pytz
 from tasks.notify_weight import activate_notification, deactivate_notification
+from tasks.change_timezone import change_timezone
 
 
 @sentence
 async def ask_time_zone(io: DialogIO):
-    now_time = datetime.now().strftime('%H:%M')
-    prompt = (f'У нас сейчас {now_time}.\n'
+    now_dt = now_local_dt()
+
+    now_text = now_dt.strftime('%H:%M')
+    prompt = (f'У нас сейчас {now_text}.\n'
               'Сколько у вас сейчас времени?\n'
               'Выберите вариант, варианты можно прокручивать:')
 
-    now = datetime.now()
+    if not io.asked:
+        io.state['now'] = now_dt.isoformat()
+    else:
+        now_dt = datetime.fromisoformat(io.state['now'])
 
-    def shift_to_time(s):
-        their_now = date_shift(now, s)
+    def format_date(name):
+        their_now = now_dt.astimezone(pytz.timezone(name))
         return format_date_for_tz_selector(their_now)
 
-    variants = [(shift_to_time(s), s) for s in POSSIBLE_TIMEZONE_SHIFTS]
+    variants = [(format_date(tz_name), tz_name) for tz_name in DIFFERENT_TIMEZONE_NAMES]
     variants_columned = list(chunks(variants, n=3))
     result = create_menu(io, prompt, variants_columned)
 
     if result is not None:
-        await io.profile.set_time_shift(result)
-        tz_names = ', '.join(possible_timezones(result))
-        io.back(f'Часовой пояс установлен: ({tz_names})')
+        print('tz name =', result)
+        await change_timezone(io.profile, result)
+        io.back(f'Часовой пояс установлен.').clear('now')
 
 
 @sentence
@@ -37,17 +43,16 @@ async def ask_notification_time(io: DialogIO):
         io.ask(f'Давайте настроим напонимание о том, что вам пора внести вес. Введите время в формате ЧЧ:ММ - 24 часа.',
                keyboard=[[not_notify_text], [back_text]])
     else:
-        user_id = io.profile.user_id
         if io.text == not_notify_text:
-            await deactivate_notification(user_id)
+            await deactivate_notification(io.profile)
             io.back('Напонимание выключено!')
         elif io.text == back_text:
             io.back()
         else:
             try:
                 hh, mm = hour_and_min_from_str(io.text)
-                await activate_notification(user_id, hh, mm)
-                io.reply(f'Напонимание установлено!').back()
+                await activate_notification(io.profile, hh, mm)
+                io.back(f'Напонимание установлено!')
             except (AssertionError, ValueError):
                 io.ask('Кажется, вы меня не так поняли! Введите время в формате ЧЧ:ММ - 24 часа.')
 

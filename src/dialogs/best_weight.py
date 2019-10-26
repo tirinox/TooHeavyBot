@@ -16,7 +16,7 @@ async def ask_height(io: DialogIO):
     if height:
         sex = io.state['sex']
         result = best_weight_formula(height, sex)
-        io.reply(f'Ваш идеальный вес: {result} кг').back()
+        io.reply(f'Ваш идеальный вес: {result} кг').back().clear('sex')
 
 
 @sentence

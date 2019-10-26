@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import time
 import pytz
 import locale
+from tzlocal import get_localzone
 
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 
@@ -75,6 +76,10 @@ def ts_format(timestamp, local=True, for_file=False):
         return dt.strftime('%d-%m-%Y_%H-%M-%S')
     else:
         return dt.strftime('%d-%m-%Y %H:%M:%S')
+
+
+def now_local_dt():
+    return datetime.now(tz=get_localzone())
 
 
 LONG_AGO = datetime(1980, 1, 1)
@@ -159,63 +164,44 @@ def time_of_user(time_shift_minutes):
     return datetime.now() + timedelta(time_shift_minutes)
 
 
-def get_zone_time_shift(tz: pytz.timezone) -> timedelta:
-    null_delta = timedelta(0, 0)
-    non_dst_offset = getattr(tz, '_transition_info', [[null_delta]])[-1]
-    return non_dst_offset[0]
-
-
-def possible_timezones(tz_offset_min, common_only=True):
-    timezones = pytz.common_timezones if common_only else pytz.all_timezones
-
-    # convert the float hours offset to a timedelta
-    offset_days, offset_seconds = 0, int(tz_offset_min * 60)
-    if offset_seconds < 0:
-        offset_days = -1
-        offset_seconds += 24 * 3600
-    desired_delta = timedelta(offset_days, offset_seconds)
-
-    # Loop through the timezones and find any with matching offsets
-    results = []
-    for tz_name in timezones:
-        tz = pytz.timezone(tz_name)
-        if desired_delta == get_zone_time_shift(tz):
-            results.append(tz_name)
-
-    return results
-
-
-def get_possible_shifts(common_only=True):
-    timezones = pytz.common_timezones if common_only else pytz.all_timezones
-
-    shifts = set()
-
-    for tz_name in timezones:
-        tz = pytz.timezone(tz_name)
-        shift = get_zone_time_shift(tz)
-        minutes = int(shift.total_seconds() / 60)
-        shifts.add(minutes)
-
-    shifts_list = list(shifts)
-    shifts_list.sort()
-    return shifts_list
-
-
-POSSIBLE_TIMEZONE_SHIFTS = get_possible_shifts()
-
-
-def date_shift(d: datetime, tz_shift_minutes):
-    timezones_names = possible_timezones(tz_shift_minutes)
-    if not timezones_names:
-        raise ValueError(f'invalid time shift {tz_shift_minutes}; must be one of {POSSIBLE_TIMEZONE_SHIFTS}')
-
-    zone = pytz.timezone(timezones_names[0])
-    their_date = d.astimezone(zone)
-    return their_date
-
-
 DATETIME_FORMAT_TO_SETTING = '%A %H:%M'
 
 
 def format_date_for_tz_selector(d: datetime):
     return d.strftime(DATETIME_FORMAT_TO_SETTING)
+
+
+def get_possible_tz_names(common_only=True):
+    timezones = pytz.common_timezones if common_only else pytz.all_timezones
+
+    names = {}
+
+    now = now_local_dt()
+    for tz_name in timezones:
+        tz = pytz.timezone(tz_name)
+        unique_key = format_date_for_tz_selector(now.astimezone(tz))
+        names[unique_key] = tz_name
+
+    for k in sorted(names.keys()):
+        yield names[k]
+
+
+DIFFERENT_TIMEZONE_NAMES = list(get_possible_tz_names())
+
+
+def convert_hh_mm(hh, mm, from_tz, to_tz):
+    their_dt = datetime(2019, 8, 26, hour=hh, minute=mm, tzinfo=from_tz)
+    out_dt = their_dt.astimezone(to_tz)
+    return out_dt.hour, out_dt.minute
+
+
+def convert_time_hh_mm_to_local(hh, mm, tz_name):
+    their_tz = pytz.timezone(tz_name)
+    return convert_hh_mm(hh, mm, their_tz, get_localzone())
+
+
+def convert_time_hh_mm_to_their(hh, mm, tz_name):
+    their_tz = pytz.timezone(tz_name)
+    return convert_hh_mm(hh, mm, get_localzone(), their_tz)
+
+

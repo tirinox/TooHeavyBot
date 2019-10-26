@@ -67,6 +67,10 @@ class DialogIO:
         self.state[name] = value
         return self
 
+    def clear(self, *keys):
+        for k in keys:
+            self.state.pop(k, None)
+
     def ask(self, text: str, keyboard=None):
         self.set(self.ASKED, True)
         return self.reply(text, keyboard)

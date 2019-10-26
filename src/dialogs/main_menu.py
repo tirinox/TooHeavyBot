@@ -8,8 +8,8 @@ from chat.msg_io import *
 async def main_menu(io: DialogIO):
     prompt = """Привет! Я робот-тренер и помогу тебе достичь идеального веса (похудеть или набрать массу)!"""
 
-    time_offset = await io.profile.get_time_shift()
-    if time_offset is None:
+    tz_name = await io.profile.get_time_zone()
+    if tz_name is None:
         return io.push(ask_time_zone)
 
     result = create_menu(io, prompt,
