@@ -53,10 +53,12 @@ async def ask_aim_menu(io: DialogIO):
         return io.push(ask_weight_aim)
 
     result = create_menu(io, "Мы посчитаем процент вашего прогресса:", variants=[
-        ('Внести вес сегодня', 'enter_today_weight'),
-        (f'Изменить старт ({weight_format(weight_start)} кг)', 'change_start_weight'),
-        (f'Изменить цель ({weight_format(weight_aim)} кг)', 'change_aim_weight'),
-        ('Назад', 'back')
+        [('Внести вес сегодня', 'enter_today_weight')],
+        [
+            (f'Изменить старт ({weight_format(weight_start)} кг)', 'change_start_weight'),
+            (f'Изменить цель ({weight_format(weight_aim)} кг)', 'change_aim_weight')
+        ],
+        [('Назад', 'back')]
     ])
 
     if result == 'enter_today_weight':
@@ -67,5 +69,6 @@ async def ask_aim_menu(io: DialogIO):
         io.push(ask_weight_aim)
     elif result == 'back':
         io.back()
+
 
 aim_percent_entry = ask_aim_menu
