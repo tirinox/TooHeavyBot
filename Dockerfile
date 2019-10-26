@@ -1,7 +1,7 @@
 FROM python:3.7
 MAINTAINER Tirinox
 
-RUN apt-get install language-pack-RU
+RUN apt-get clean && apt-get update && apt-get install -y locales
 RUN locale-gen ru_RU && locale-gen ru_RU.UTF-8 && update-locale
 
 ADD ./requirements.txt /req/
