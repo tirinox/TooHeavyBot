@@ -1,10 +1,7 @@
 FROM python:3.7
 MAINTAINER Tirinox
 
-ENV LANGUAGE ru_RU.UTF-8
-ENV LANG ru_RU.UTF-8
-ENV LC_ALL ru_RU.UTF-8
-RUN locale-gen ru_RU.UTF-8 && dpkg-reconfigure locales
+RUN locale-gen ru_RU && locale-gen ru_RU.UTF-8 && update-locale 
 
 ADD ./requirements.txt /req/
 RUN pip install -r /req/requirements.txt
