@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
 import time
 import pytz
-import locale
 from tzlocal import get_localzone
-
-locale.setlocale(locale.LC_TIME, 'ru_RU')
 
 
 MINUTE = 60

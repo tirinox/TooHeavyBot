@@ -2,7 +2,6 @@ from models.profile import Profile
 from models.time_tracker import TimeTracker
 from util.date import hour_and_min_from_str, convert_time_hh_mm_to_local
 import logging
-import pytz
 from tzlocal import get_localzone
 from datetime import datetime
 from chat.bot_telegram import TelegramBot
