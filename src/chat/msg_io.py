@@ -15,9 +15,13 @@ STATE_STACK_KEY = '__stack'
 
 DIALOG_PREFIX = 'dialogs.'
 
+CANCELLED = 'CANCELLED'
+
 # fixme: move to translations!
 INVALID_MENU_OPTION_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
 INVALID_NUMBER_MESSAGE = "<pre>Плохое число!</pre>"
+
+CANCEL_TEXT = 'Отмена'
 
 
 def fname(f):
@@ -192,8 +196,12 @@ def ask_for_number(io: DialogIO,
                    prompt,
                    min_value=float('-inf'),
                    max_value=float('+inf'),
-                   error_msg=INVALID_NUMBER_MESSAGE):
+                   error_msg=INVALID_NUMBER_MESSAGE, with_cancel=True):
     if io.asked:
+        if with_cancel and io.text == CANCEL_TEXT:
+            io.reset_asked()
+            return CANCELLED
+
         try:
             text = io.text.replace(',', '.').replace(' ', '')
             number = float(text)
@@ -203,4 +211,4 @@ def ask_for_number(io: DialogIO,
         except (AssertionError, ValueError):
             io.ask(error_msg)
     else:
-        io.ask(prompt)
+        io.ask(prompt, keyboard=[CANCEL_TEXT] if with_cancel else None)

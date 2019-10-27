@@ -3,7 +3,7 @@ from models.time_tracker import TimeTracker
 from util.date import hour_and_min_from_str, convert_time_hh_mm_to_local, parse_timespan_to_seconds, delta_to_next_hh_mm
 import logging
 from tzlocal import get_localzone
-from datetime import datetime, timedelta
+from datetime import datetime
 from chat.bot_telegram import TelegramBot
 import asyncio
 
