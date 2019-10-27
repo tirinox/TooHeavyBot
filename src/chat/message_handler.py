@@ -67,7 +67,12 @@ class MessageHandler:
         if all_reply_texts:
             if io_obj.join_messages:
                 text_sum = NEW_LINE.join(all_reply_texts)
-                await message.reply(text_sum, reply=False, reply_markup=io_obj.out_keyboard)
+                await message.reply(text_sum,
+                                    reply=False,
+                                    reply_markup=io_obj.out_keyboard,
+                                    disable_notification=True)
             else:
                 for reply_text in all_reply_texts:
-                    await message.reply(reply_text, reply=False, reply_markup=io_obj.out_keyboard)
+                    await message.reply(reply_text, reply=False,
+                                        reply_markup=io_obj.out_keyboard,
+                                        disable_notification=True)
