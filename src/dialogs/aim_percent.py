@@ -16,7 +16,9 @@ def weight_format(w):
 async def ask_current_weight(io: DialogIO):
     weight = ask_for_number(io, 'Введите ваш вес сегодня в кг:',
                             40, 500, 'Должно быть число от 40 до 500!')
-    if weight is not None:
+    if weight == CANCELLED:
+        io.back()
+    elif weight is not None:
         weight_start = try_parse_float(await io.profile.get_prop('weight_start'))
         weight_aim = try_parse_float(await io.profile.get_prop('weight_aim'))
         if weight_start and weight_aim:
