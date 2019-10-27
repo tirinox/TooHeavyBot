@@ -26,13 +26,14 @@ async def ask_current_weight(io: DialogIO):
             await report_weight(io.profile, weight, percent)
 
             y_weight = await get_yesterday_weight(io.profile)
-            delta = abs(y_weight - weight)
-            if y_weight > weight:
-                io.add(f'Вы похудели на {delta:0.2f} кг со вчера.\n')
-            elif y_weight < weight:
-                io.add(f'Вы поправились на {delta:0.2f} кг со вчера.\n')
-            else:
-                io.add(f'Ваш вес не изменился со вчера.\n')
+            if y_weight is not None:
+                delta = abs(y_weight - weight)
+                if y_weight > weight:
+                    io.add(f'Вы похудели на {delta:0.2f} кг со вчера.\n')
+                elif y_weight < weight:
+                    io.add(f'Вы поправились на {delta:0.2f} кг со вчера.\n')
+                else:
+                    io.add(f'Ваш вес не изменился со вчера.\n')
 
         io.back()
 
