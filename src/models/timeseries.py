@@ -19,7 +19,7 @@ class TimePoint(ModelBase):
         data = await DB().redis.get(self.key)
         try:
             self.value = json.loads(data)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, TypeError):
             self.value = {}
         return self
 
