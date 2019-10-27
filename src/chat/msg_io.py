@@ -67,6 +67,10 @@ class DialogIO:
             self.out_keyboard = keyboard
         return self
 
+    def add(self, text: str):
+        self.out_text += text
+        return self
+
     def set(self, name, value):
         self.state[name] = value
         return self

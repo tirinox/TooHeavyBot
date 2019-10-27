@@ -18,7 +18,7 @@ async def report_weight(profile: Profile, weight, percent):
     await tp.save()
 
 
-async def yesterday_weight(profile: Profile):
+async def get_yesterday_weight(profile: Profile):
     their_now = await profile.get_their_now()
 
     their_yesterday = their_now - timedelta(days=1)

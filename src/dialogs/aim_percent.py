@@ -1,6 +1,6 @@
 from chat.msg_io import *
 from util import try_parse_float
-from tasks.weight_control import report_weight
+from tasks.weight_control import report_weight, get_yesterday_weight
 
 
 def aim_percent_formula(current, ideal, start):
@@ -24,6 +24,15 @@ async def ask_current_weight(io: DialogIO):
             io.reply(f'\nВаш прогресс:\n {percent:.2f} %\n')
 
             await report_weight(io.profile, weight, percent)
+
+            y_weight = await get_yesterday_weight(io.profile)
+            delta = abs(y_weight - weight)
+            if y_weight > weight:
+                io.add(f'Вы похудели на {delta:0.2f} кг со вчера.\n')
+            elif y_weight < weight:
+                io.add(f'Вы поправились на {delta:0.2f} кг со вчера.\n')
+            else:
+                io.add(f'Ваш вес не изменился со вчера.\n')
 
         io.back()
 

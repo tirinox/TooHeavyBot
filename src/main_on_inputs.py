@@ -8,11 +8,26 @@ import asyncio
 from aiogram.types import Message
 from tasks import task_manager
 from tasks.delete_profile import delete_profile
+from models.timeseries import TimePoint
+from tasks.weight_control import WEIGHT
 
 
 USER_ID = 102
 
 last_keyboard_anwer_map = {}
+
+
+async def testus():
+    pass
+    # their_now = now_local_dt() - timedelta(days=1)
+    # tp = TimePoint(WEIGHT, USER_ID, their_now)
+    # tp.value = {
+    #     'weight': 102,
+    #     'percent': 35,
+    #     'ts': int(their_now.timestamp())
+    # }
+    # await tp.save()
+
 
 
 class FakeMessage(Message):
@@ -40,6 +55,8 @@ class FakeMessage(Message):
 
 async def repl_loop(message_handler: MessageHandler):
     global last_keyboard_anwer_map
+
+    await testus()
 
     while True:
         # i know that input() is sync, but for local testing it is totally OK!
