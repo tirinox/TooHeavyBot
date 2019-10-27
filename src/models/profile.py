@@ -1,5 +1,5 @@
 from util.database import ModelBase, DB
-from util.date import now_tsi
+from util.date import now_tsi, now_local_dt
 import json
 import pytz
 from datetime import datetime
@@ -64,6 +64,9 @@ class Profile(ModelBase):
             tz = pytz.UTC
 
         return dt.astimezone(tz)
+
+    async def get_their_now(self):
+        return await self.get_their_time(now_local_dt())
 
     async def activity(self):
         return await self.set_prop(self.LAST_ACTIVITY_KEY, now_tsi())
