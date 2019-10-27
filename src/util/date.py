@@ -187,7 +187,8 @@ DIFFERENT_TIMEZONE_NAMES = list(get_possible_tz_names())
 
 
 def convert_hh_mm(hh, mm, from_tz, to_tz):
-    their_dt = datetime(2019, 8, 26, hour=hh, minute=mm, tzinfo=from_tz)
+    today = now_local_dt()
+    their_dt = datetime(today.year, today.month, today.day, hour=hh, minute=mm, tzinfo=from_tz)
     out_dt = their_dt.astimezone(to_tz)
     return out_dt.hour, out_dt.minute
 
@@ -201,4 +202,18 @@ def convert_time_hh_mm_to_their(hh, mm, tz_name):
     their_tz = pytz.timezone(tz_name)
     return convert_hh_mm(hh, mm, get_localzone(), their_tz)
 
+
+def delta_to_next_hh_mm(hh, mm):
+    today_dt = now_local_dt()
+    that_dt = today_dt.replace(hour=hh, minute=mm)
+    if that_dt >= today_dt:
+        return that_dt - today_dt
+    else:
+        return (that_dt + timedelta(days=1)) - today_dt
+
+
+def hh_mm_from_timedelta(delta: timedelta) -> (int, int):
+    hours, remainder = divmod(delta.seconds, 3600)
+    minutes, _s = divmod(remainder, 60)
+    return hours, minutes
 

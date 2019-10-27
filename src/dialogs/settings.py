@@ -49,8 +49,9 @@ async def ask_notification_time(io: DialogIO):
         else:
             try:
                 hh, mm = hour_and_min_from_str(io.text)
-                await activate_notification(io.profile, hh, mm)
-                io.back(f'Напонимание установлено!')
+                delta = await activate_notification(io.profile, hh, mm)
+                d_hh, d_mm = hh_mm_from_timedelta(delta)
+                io.back(f'Напонимание установлено! Оно прозвучит через {d_hh} ч. {d_mm} мин.')
             except (AssertionError, ValueError):
                 io.ask('Кажется, вы меня не так поняли! Введите время в формате ЧЧ:ММ - 24 часа.')
 

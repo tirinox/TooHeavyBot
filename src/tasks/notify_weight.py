@@ -1,16 +1,20 @@
 from models.profile import Profile
 from models.time_tracker import TimeTracker
-from util.date import hour_and_min_from_str, convert_time_hh_mm_to_local
+from util.date import hour_and_min_from_str, convert_time_hh_mm_to_local, parse_timespan_to_seconds, delta_to_next_hh_mm
 import logging
 from tzlocal import get_localzone
-from datetime import datetime
+from datetime import datetime, timedelta
 from chat.bot_telegram import TelegramBot
+import asyncio
 
 
 KEY_NOTIFICATION_TIME = 'notification_time'
 KEY_WEIGHT_TRACKER = 'weight_tracker'
+KEY_LAST_SENT_TS = 'last_sent_ts'
 
-NOTIFICATION_TEXT = 'Пора бы внести вес, еще не внесни еще сегодня!'
+NOTIFICATION_COOLDOWN = parse_timespan_to_seconds('1m')
+
+NOTIFICATION_TEXT = 'Пора бы внести вес, еще не внесли еще сегодня!'
 
 
 async def activate_notification(profile: Profile, hh, mm):
@@ -27,6 +31,8 @@ async def activate_notification(profile: Profile, hh, mm):
 
     tr = TimeTracker(KEY_WEIGHT_TRACKER, local_hh, local_mm)
     await tr.register_user(profile.user_id)
+
+    return delta_to_next_hh_mm(local_hh, local_mm)
 
 
 async def deactivate_notification(profile: Profile):
@@ -50,8 +56,21 @@ async def deactivate_notification(profile: Profile):
         ...
 
 
+async def notify_one_user(bot: TelegramBot, user_id, now_ts):
+    profile = Profile(user_id)
+    last_ts = await profile.get_prop(KEY_LAST_SENT_TS)
+    last_ts = 0 if last_ts is None else int(last_ts)
+
+    if now_ts > last_ts + NOTIFICATION_COOLDOWN:
+        await profile.set_prop(KEY_LAST_SENT_TS, now_ts)
+        await bot.send_text(user_id, NOTIFICATION_TEXT)
+
+
 async def notify_all_by_time(bot: TelegramBot):
     now = datetime.now(tz=get_localzone())
+    now_ts = int(now.timestamp())
+
     tr = TimeTracker(KEY_WEIGHT_TRACKER, now.hour, now.minute)
-    for user_id in await tr.list():
-        await bot.send_text(user_id, NOTIFICATION_TEXT)
+
+    user_ids = await tr.list()
+    await asyncio.gather(*(notify_one_user(bot, user_id, now_ts) for user_id in user_ids))
