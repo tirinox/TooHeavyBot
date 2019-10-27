@@ -132,7 +132,7 @@ def hour_and_min_from_str(s):
     s = s.strip()
     try:
         hh, mm = s.split(':')
-    except TypeError:
+    except (TypeError, ValueError):
         hh, mm = filter(lambda x: x.strip(), s.split(' '))
 
     hh, mm = int(hh), int(mm)

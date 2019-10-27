@@ -15,10 +15,17 @@ async def ask_time_zone(io: DialogIO):
               'отправлять ваш точный адрес. Вы можете отправить любую локацию из вашего часового пояса.')
               # 'Или вы можете написать название вашего города, чтобы мы поискали в своей базе:')
 
+    back_text = 'Назад'
+
     if not io.asked:
-        io.ask(prompt, [KeyboardButton('📍 Отправить локацию', request_location=True)])
+        io.ask(prompt, [
+            [KeyboardButton('📍 Отправить локацию', request_location=True)],
+            [KeyboardButton(back_text)]
+        ])
     else:
-        if io.location:
+        if io.text == back_text:
+            io.back()
+        elif io.location:
             tz_name = tz_finder.timezone_at(lng=io.location.longitude, lat=io.location.latitude)
             try:
                 pytz.timezone(tz_name)
@@ -36,9 +43,10 @@ async def ask_time_zone(io: DialogIO):
 async def ask_notification_time(io: DialogIO):
     not_notify_text = 'Не уведомлять'
     back_text = 'Назад'
+    hint_time = 'Введите время в формате ЧЧ:ММ или ЧЧ ММ - 24 часа. Например: "8:00" или "12 05".'
 
     if not io.asked:
-        io.ask(f'Давайте настроим напонимание о том, что вам пора внести вес. Введите время в формате ЧЧ:ММ - 24 часа.',
+        io.ask(f'Давайте настроим напонимание о том, что вам пора внести вес. {hint_time}',
                keyboard=[[not_notify_text], [back_text]])
     else:
         if io.text == not_notify_text:
@@ -53,7 +61,7 @@ async def ask_notification_time(io: DialogIO):
                 d_hh, d_mm = hh_mm_from_timedelta(delta)
                 io.back(f'Напонимание установлено! Оно прозвучит через {d_hh} ч. {d_mm} мин.')
             except (AssertionError, ValueError):
-                io.ask('Кажется, вы меня не так поняли! Введите время в формате ЧЧ:ММ - 24 часа.')
+                io.ask(f'Кажется, вы меня не так поняли! {hint_time}')
 
 
 @sentence
