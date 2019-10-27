@@ -187,8 +187,7 @@ DIFFERENT_TIMEZONE_NAMES = list(get_possible_tz_names())
 
 
 def convert_hh_mm(hh, mm, from_tz, to_tz):
-    today = now_local_dt()
-    their_dt = datetime(today.year, today.month, today.day, hour=hh, minute=mm, tzinfo=from_tz)
+    their_dt = datetime.now(tz=from_tz).replace(hour=hh, minute=mm)
     out_dt = their_dt.astimezone(to_tz)
     return out_dt.hour, out_dt.minute
 
