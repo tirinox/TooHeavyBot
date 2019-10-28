@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 from models.profile import Profile
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
-from typing import Union, Any
 import logging
-from localization import get_localization, languages
+from localization import *
 
 
 NEW_LINE = '\n'
@@ -56,12 +55,16 @@ class DialogIO:
     ASKED = '__asked'
 
     @property
-    def language(self):
+    def language(self) -> LangEnglish:
         return self._lang
 
     @language.setter
     def language(self, lang):
         self._lang = get_localization(lang)
+
+    async def change_language(self, code):
+        await self.profile.set_prop(Profile.LANGUAGE_KEY, code)
+        self.language = code
 
     def reply(self, text: str, keyboard=None):
         self.out_text = text

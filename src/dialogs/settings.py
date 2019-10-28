@@ -10,79 +10,77 @@ tz_finder = TimezoneFinder(in_memory=True)
 
 @sentence
 async def ask_time_zone(io: DialogIO):
-    prompt = (f'Чтобы вовремя отправлять вам уведомления, нам нужно узнать ваш часовой пояс.\n\n'
-              'Вы может отправить геолокацию, чтобы мы определели часовой пояс. Не обязательно '
-              'отправлять ваш точный адрес. Вы можете отправить любую локацию из вашего часового пояса.')
-              # 'Или вы можете написать название вашего города, чтобы мы поискали в своей базе:')
+    lang = io.language
 
-    back_text = 'Назад'
+    prompt = lang.time_zone_prompt
 
     if not io.asked:
         io.ask(prompt, [
-            [KeyboardButton('📍 Отправить локацию', request_location=True)],
-            [KeyboardButton(back_text)]
+            [KeyboardButton(lang.send_location, request_location=True)],
+            [KeyboardButton(lang.back)]
         ])
     else:
-        if io.text == back_text:
+        if io.text == lang.back:
             io.back()
         elif io.location:
             tz_name = tz_finder.timezone_at(lng=io.location.longitude, lat=io.location.latitude)
             try:
                 pytz.timezone(tz_name)
             except pytz.UnknownTimeZoneError:
-                io.ask('Мы не смогли найти подходящий часовой пояс для вашей локации. '
-                       'Введите название города вручную:')
+                io.ask(lang.time_zone_err_bad_loc)
             else:
                 await change_timezone(io.profile, tz_name)
-                io.reply(f'Мы установили, что ваш часовой пояс: <b>{tz_name}</b>. Верно?\n').back()
+                io.reply(lang.time_zone_ok(tz_name)).back()
         else:
-            io.ask('Не знаю такого города...')
+            io.ask(lang.time_zone_unknown_city)
 
 
 @sentence
 async def ask_notification_time(io: DialogIO):
-    not_notify_text = 'Не уведомлять'
-    back_text = 'Назад'
-    hint_time = 'Введите время в формате ЧЧ:ММ или ЧЧ ММ - 24 часа. Например: "8:00" или "12 05".'
+    lang = io.language
 
     if not io.asked:
-        io.ask(f'Давайте настроим напонимание о том, что вам пора внести вес. {hint_time}',
-               keyboard=[[not_notify_text], [back_text]])
+        io.ask(lang.s_not_ask,
+               keyboard=[[lang.s_not_dont], [lang.back]])
     else:
-        if io.text == not_notify_text:
+        if io.text == lang.s_not_dont:
             await deactivate_notification(io.profile)
-            io.back('Напонимание выключено!')
-        elif io.text == back_text:
+            io.back(lang.s_not_off)
+        elif io.text == lang.back:
             io.back()
         else:
             try:
                 hh, mm = hour_and_min_from_str(io.text)
                 delta = await activate_notification(io.profile, hh, mm)
                 d_hh, d_mm = hh_mm_from_timedelta(delta)
-                io.back(f'Напонимание установлено! Оно прозвучит через {d_hh} ч. {d_mm} мин.')
+                io.back(lang.s_not_on(d_hh, d_mm))
             except (AssertionError, ValueError):
-                io.ask(f'Кажется, вы меня не так поняли! {hint_time}')
+                io.ask(lang.s_not_err)
 
 
 @sentence
 async def ask_language(io: DialogIO):
-    result = create_menu(io, 'Hi / Привет!', variants=[
-        ('English', 'eng'),
-        ('Русский', 'rus')
+    lang = io.language
+
+    result = create_menu(io, io.language.s_lang_hi, variants=[
+        (lang.s_english, 'eng'),
+        (lang.s_russian, 'rus')
     ])
     if result in ('eng', 'rus'):
-        await io.profile.set_prop(Profile.LANGUAGE_KEY, result)
-        io.reply('Установлен язык.').back()
+        await io.change_language(result)
+        io.reply(io.language.s_lang_set).back()
 
 
 @sentence
 async def settings_menu(io: DialogIO):
-    result = create_menu(io, 'Настройки бота:',
+    lang = io.language
+
+    result = create_menu(io, lang.s_title,
                          variants=[
-                             [('Часовой пояс', 1)],
-                             [('Напоминание', 2)],
-                             [('Язык', 3)],
-                             [('Назад', 'back')]
+                             [(lang.s_timezone, 1)],
+                             [(lang.s_notification, 2)],
+                             [(lang.s_language, 3)],
+                             [(lang.back, 'back')]
                          ])
     if result == 1:
         return io.push(ask_time_zone)
