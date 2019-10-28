@@ -6,7 +6,11 @@ from chat.msg_io import *
 
 @sentence
 async def main_menu(io: DialogIO):
-    prompt = """Привет! Я робот-тренер и помогу тебе достичь идеального веса (похудеть или набрать массу)!"""
+    prompt = io.language.hello
+
+    lang = await io.profile.get_prop(Profile.LANGUAGE_KEY)
+    if lang is None:
+        return io.push(ask_language)
 
     tz_name = await io.profile.get_time_zone()
     if tz_name is None:
@@ -14,9 +18,9 @@ async def main_menu(io: DialogIO):
 
     result = create_menu(io, prompt,
                          variants=[
-                             [('Мой идеальный вес', 1)],
-                             [('Процент цели?', 2)],
-                             [('Настройки', 3)]
+                             [(io.language.mm_ideal_weight, 1)],
+                             [(io.language.mm_aim_percent, 2)],
+                             [(io.language.mm_settings, 3)]
                          ])
     if result == 1:
         return io.push(best_weight_entry)

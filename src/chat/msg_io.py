@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from models.profile import Profile
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
-from typing import Union
+from typing import Union, Any
 import logging
+from localization import get_localization, languages
 
 
 NEW_LINE = '\n'
@@ -16,12 +17,6 @@ STATE_STACK_KEY = '__stack'
 DIALOG_PREFIX = 'dialogs.'
 
 CANCELLED = 'CANCELLED'
-
-# fixme: move to translations!
-INVALID_MENU_OPTION_MESSAGE = "<pre>Неизвестная опция меню!</pre>"
-INVALID_NUMBER_MESSAGE = "<pre>Плохое число!</pre>"
-
-CANCEL_TEXT = 'Отмена'
 
 
 def fname(f):
@@ -56,7 +51,17 @@ class DialogIO:
     out_text: str = None
     join_messages: bool = True
 
+    _lang: Union[languages] = None
+
     ASKED = '__asked'
+
+    @property
+    def language(self):
+        return self._lang
+
+    @language.setter
+    def language(self, lang):
+        self._lang = get_localization(lang)
 
     def reply(self, text: str, keyboard=None):
         self.out_text = text
@@ -179,7 +184,7 @@ def make_keyboard_and_mapping(variants: list, **kwargs):
         return ReplyKeyboardMarkup(keyboard=keyboard, **kwargs), mapping
 
 
-def create_menu(io: DialogIO, prompt, variants, error_msg=INVALID_MENU_OPTION_MESSAGE):
+def create_menu(io: DialogIO, prompt, variants, error_msg=None):
     variants = normalize_variants(variants)
     keyboard, mapping = make_keyboard_and_mapping(variants, row_width=1)
 
@@ -189,7 +194,7 @@ def create_menu(io: DialogIO, prompt, variants, error_msg=INVALID_MENU_OPTION_ME
             return mapping[io.text]
         else:
             # invalid answer:
-            io.reply(error_msg, keyboard)
+            io.reply(error_msg or io.language.invalid_menu_option, keyboard)
     else:
         # no menu installed
         io.ask(prompt, keyboard)
@@ -200,9 +205,9 @@ def ask_for_number(io: DialogIO,
                    prompt,
                    min_value=float('-inf'),
                    max_value=float('+inf'),
-                   error_msg=INVALID_NUMBER_MESSAGE, with_cancel=True):
+                   error_msg=None, with_cancel=True):
     if io.asked:
-        if with_cancel and io.text == CANCEL_TEXT:
+        if with_cancel and io.text == io.language.cancel:
             io.reset_asked()
             return CANCELLED
 
@@ -213,6 +218,6 @@ def ask_for_number(io: DialogIO,
             io.reset_asked()
             return number
         except (AssertionError, ValueError):
-            io.ask(error_msg)
+            io.ask(error_msg or io.language.invalid_number)
     else:
-        io.ask(prompt, keyboard=[CANCEL_TEXT] if with_cancel else None)
+        io.ask(prompt, keyboard=[io.language.cancel] if with_cancel else None)

@@ -10,6 +10,7 @@ class Profile(ModelBase):
     NOTIFICATION_TIME_KEY = 'notif_time'
     TIME_ZONE_KEY = 'tz_name'
     LAST_ACTIVITY_KEY = 'last_activity'
+    LANGUAGE_KEY = 'lang'
 
     def __init__(self, user_id):
         self.user_id = user_id

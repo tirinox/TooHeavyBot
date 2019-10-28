@@ -65,16 +65,30 @@ async def ask_notification_time(io: DialogIO):
 
 
 @sentence
+async def ask_language(io: DialogIO):
+    result = create_menu(io, 'Hi / Привет!', variants=[
+        ('English', 'eng'),
+        ('Русский', 'rus')
+    ])
+    if result in ('eng', 'rus'):
+        await io.profile.set_prop(Profile.LANGUAGE_KEY, result)
+        io.reply('Установлен язык.').back()
+
+
+@sentence
 async def settings_menu(io: DialogIO):
     result = create_menu(io, 'Настройки бота:',
                          variants=[
                              [('Часовой пояс', 1)],
                              [('Напоминание', 2)],
+                             [('Язык', 3)],
                              [('Назад', 'back')]
                          ])
     if result == 1:
         return io.push(ask_time_zone)
     elif result == 2:
         return io.push(ask_notification_time)
+    elif result == 3:
+        return io.push(ask_language)
     elif result == 'back':
         return io.back()
