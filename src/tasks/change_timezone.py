@@ -6,12 +6,11 @@ from geopy.geocoders import GoogleV3
 from util.config import Config
 
 
-geocoder = GoogleV3(api_key=Config().get('services.google.api'))
+# geocoder = GoogleV3(api_key=Config().get('services.google.api'))
 
-
-def detect_timezone(name: str):
-    name = str(name).strip()
-    return geocoder.geocode(name, exactly_one=True)
+# def detect_timezone(name: str):
+#     name = str(name).strip()
+#     return geocoder.geocode(name, exactly_one=True)
 
 
 async def change_timezone(profile: Profile, tz_name):

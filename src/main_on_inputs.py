@@ -29,7 +29,6 @@ async def testus():
     # await tp.save()
 
 
-
 class FakeMessage(Message):
     async def reply(self, text, parse_mode=None,
                     disable_web_page_preview=None,
@@ -93,6 +92,11 @@ class FakeBot:
 
 if __name__ == '__main__':
     print('This is a local test suite based in inputs. Works without telegram connection')
+    print('  Type /exit or /quit to exit.')
+    print('  Type /dbs [key_pattern] to view redis database.')
+    print('  Type /kill <user_id> to delete the user.')
+    print('  Type /reset to reset the dialog state.')
+    print('\n')
 
     config = Config()
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)
