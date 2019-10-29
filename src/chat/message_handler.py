@@ -44,7 +44,7 @@ class MessageHandler:
 
         all_reply_texts = []
 
-        handler = self.find_handler(dialog_state)
+        handler = self.find_handler(io_obj.state)
 
         jump_no = 0
         while jump_no < self.MAX_JUMPS:
@@ -62,7 +62,7 @@ class MessageHandler:
         else:
             logging.error(f'handle recursion detected!')
 
-        await profile.set_dialog_state(dialog_state)
+        await profile.set_dialog_state(io_obj.state)
         await profile.activity()
 
         if all_reply_texts:
