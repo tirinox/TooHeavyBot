@@ -10,22 +10,27 @@ def best_weight_formula(height, sex):
 
 @sentence
 async def ask_height(io: DialogIO):
-    height = ask_for_number(io, 'Ваш рост в сантиметрах?', 50, 300,
-                            error_msg='Должно быть число от 50 до 300!')
+    lang = io.language
+    height = ask_for_number(io, lang.bw_prompt_height, 50, 300,
+                            error_msg=lang.bw_prompt_height_err)
 
     if height == CANCELLED:
         io.back()
     elif height:
         sex = io.state['sex']
         result = best_weight_formula(height, sex)
-        io.reply(f'Ваш идеальный вес: {result} кг').back().clear('sex')
+        io.reply(lang.bw_result(result)).back().clear('sex')
 
 
 @sentence
 async def ask_sex(io: DialogIO):
-    result = create_menu(io, "Какой ваш пол?", variants=[
-        [('Мужской', 'male'), ('Женский', 'female')],
-        [('Пропустить', CANCELLED)]
+    lang = io.language
+    result = create_menu(io, lang.bw_prompt_sex, variants=[
+        [
+            (lang.bw_male, 'male'),
+            (lang.bw_female, 'female')
+        ],
+        [(lang.skip, CANCELLED)]
     ])
     if result is not None:
         if result == CANCELLED:

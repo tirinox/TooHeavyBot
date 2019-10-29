@@ -6,6 +6,7 @@ class LangEnglish:
 
         self.back = 'Back'
         self.cancel = 'Cancel'
+        self.skip = 'Skip'
 
         # main menu
 
@@ -53,3 +54,27 @@ class LangEnglish:
 
         self.invalid_menu_option = "<pre>Unknown menu option!</pre>"
         self.invalid_number = "<pre>Bad number!</pre>"
+
+        # aim percent
+
+        self.ap_prompt_today_weight = 'Enter your weight today in kg:'
+        self.ap_prompt_weight_err = 'Have to be a number between 30 and 500!'
+        self.ap_drop_weight = lambda delta: f'You have dropped {delta:0.2f} кг since yesterday.\n'
+        self.ap_gain_weight = lambda delta: f'You have gained {delta:0.2f} кг since yesterday.\n'
+        self.ap_same_weight = 'You weight has not changed.\n'
+        self.ap_progress = lambda percent: f'\nYour progress is\n<b>{percent:.2f} %</b>\n'
+        self.ap_prompt_start_weight = 'Please enter your start weight (it is 0 % of aim) kg:'
+        self.ap_prompt_aim_weight = 'Please enter your target weight (it is 100 %) kg:'
+        self.ap_menu = "I will calculate your grade of progress."
+        self.ap_enter_today = 'Enter weight today'
+        self.ap_change_start = lambda s: f'Edit the start ({s:.1f} kg)'
+        self.ap_change_aim = lambda s: f'Edit the aim ({s:.1f} kg)'
+
+        # best weight
+
+        self.bw_prompt_height = 'What is your height in cm?'
+        self.bw_prompt_height_err = 'Must be a number between 50 and 300!'
+        self.bw_result = lambda result: f'Your perfect weight is {result} kg.'
+        self.bw_prompt_sex = "What is your sex?"
+        self.bw_male = 'Male'
+        self.bw_female = 'Female'

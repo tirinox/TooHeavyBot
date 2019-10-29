@@ -14,8 +14,9 @@ def weight_format(w):
 
 @sentence
 async def ask_current_weight(io: DialogIO):
-    weight = ask_for_number(io, 'Введите ваш вес сегодня в кг:',
-                            40, 500, 'Должно быть число от 40 до 500!')
+    lang = io.language
+    weight = ask_for_number(io, lang.ap_prompt_today_weight,
+                            40, 500, lang.ap_prompt_weight_err)
     if weight == CANCELLED:
         io.back()
     elif weight is not None:
@@ -23,7 +24,7 @@ async def ask_current_weight(io: DialogIO):
         weight_aim = try_parse_float(await io.profile.get_prop('weight_aim'))
         if weight_start and weight_aim:
             percent = aim_percent_formula(weight, weight_aim, weight_start)
-            io.reply(f'\nВаш прогресс:\n {percent:.2f} %\n')
+            io.reply(lang.ap_progress(percent))
 
             await report_weight(io.profile, weight, percent)
 
@@ -31,19 +32,19 @@ async def ask_current_weight(io: DialogIO):
             if y_weight is not None:
                 delta = abs(y_weight - weight)
                 if y_weight > weight:
-                    io.add(f'Вы похудели на {delta:0.2f} кг со вчера.\n')
+                    io.add(lang.ap_drop_weight(delta))
                 elif y_weight < weight:
-                    io.add(f'Вы поправились на {delta:0.2f} кг со вчера.\n')
+                    io.add(lang.ap_gain_weight(delta))
                 else:
-                    io.add(f'Ваш вес не изменился со вчера.\n')
+                    io.add(lang.ap_same_weight)
 
         io.back()
 
 
 @sentence
 async def ask_weight_start(io: DialogIO):
-    weight = ask_for_number(io, 'Введите ваш начальный вес в кг. Это будет 0 % цели:',
-                            40, 500, 'Должно быть число от 40 до 500!')
+    weight = ask_for_number(io, io.language.ap_prompt_start_weight,
+                            40, 500, io.language.ap_prompt_weight_err)
     if weight is not None:
         await io.profile.set_prop('weight_start', weight)
         io.back()
@@ -51,8 +52,8 @@ async def ask_weight_start(io: DialogIO):
 
 @sentence
 async def ask_weight_aim(io: DialogIO):
-    weight = ask_for_number(io, 'Введите ваш целевой вес в кг. Это будет 100 % цели:',
-                            40, 500, 'Должно быть число от 40 до 500!')
+    weight = ask_for_number(io, io.language.ap_prompt_aim_weight,
+                            40, 500, io.language.ap_prompt_weight_err)
     if weight is not None:
         await io.profile.set_prop('weight_aim', weight)
         io.back()
@@ -69,13 +70,15 @@ async def ask_aim_menu(io: DialogIO):
     if not weight_aim:
         return io.push(ask_weight_aim)
 
-    result = create_menu(io, "Мы посчитаем процент вашего прогресса:", variants=[
-        [('Внести вес сегодня', 'enter_today_weight')],
+    lang = io.language
+
+    result = create_menu(io, lang.ap_menu, variants=[
+        [(lang.ap_enter_today, 'enter_today_weight')],
         [
-            (f'Изменить старт ({weight_format(weight_start)} кг)', 'change_start_weight'),
-            (f'Изменить цель ({weight_format(weight_aim)} кг)', 'change_aim_weight')
+            (lang.ap_change_start(weight_start), 'change_start_weight'),
+            (lang.ap_change_aim(weight_aim), 'change_aim_weight')
         ],
-        [('Назад', 'back')]
+        [(lang.back, 'back')]
     ])
 
     if result == 'enter_today_weight':

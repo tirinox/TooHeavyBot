@@ -6,6 +6,7 @@ class LangRussian:
 
         self.back = 'Назад'
         self.cancel = 'Отмена'
+        self.skip = 'Пропустить'
 
         # main menu
 
@@ -53,3 +54,27 @@ class LangRussian:
 
         self.invalid_menu_option = "<pre>Неизвестная опция меню!</pre>"
         self.invalid_number = "<pre>Плохое число!</pre>"
+
+        # aim percent
+
+        self.ap_prompt_today_weight = 'Введите ваш вес сегодня в кг:'
+        self.ap_prompt_weight_err = 'Должно быть число от 40 до 500!'
+        self.ap_drop_weight = lambda delta: f'Вы похудели на {delta:0.2f} кг со вчера.\n'
+        self.ap_gain_weight = lambda delta: f'Вы поправились на {delta:0.2f} кг со вчера.\n'
+        self.ap_same_weight = 'Ваш вес не изменился со вчера.\n'
+        self.ap_progress = lambda percent: f'\nВаш прогресс:\n<b>{percent:.2f} %</b>\n'
+        self.ap_prompt_start_weight = 'Введите ваш начальный вес в кг. Это будет 0 % цели:'
+        self.ap_prompt_aim_weight = 'Введите ваш целевой вес в кг. Это будет 100 % цели:'
+        self.ap_menu = "Мы посчитаем процент вашего прогресса:"
+        self.ap_enter_today = 'Внести вес сегодня'
+        self.ap_change_start = lambda s: f'Изменить старт ({s:.1f} кг)'
+        self.ap_change_aim = lambda s: f'Изменить цель ({s:.1f} кг)'
+
+        # best weight
+
+        self.bw_prompt_height = 'Ваш рост в сантиметрах?'
+        self.bw_prompt_height_err = 'Должно быть число от 50 до 300!'
+        self.bw_result = lambda result: f'Ваш идеальный вес: {result} кг'
+        self.bw_prompt_sex = "Какой ваш пол?"
+        self.bw_male = 'Мужской'
+        self.bw_female = 'Женский'
