@@ -84,12 +84,12 @@ async def settings_menu(io: DialogIO):
                              [(lang.back, 'back')]
                          ])
     if result == 1:
-        return io.push(ask_time_zone)
+        io.push(ask_time_zone)
     elif result == 2:
-        return io.push(ask_notification_time)
+        io.push(ask_notification_time)
     elif result == 3:
-        return io.push(ask_language)
+        io.push(ask_language)
     elif result == 4:
-        return io.push(best_weight_entry)
+        io.push(best_weight_entry)
     elif result == 'back':
-        return io.back()
+        io.back()
