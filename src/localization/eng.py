@@ -12,7 +12,6 @@ class LangEnglish:
 
         self.hello = "Hi! I'm a trainer robot. I will help you to drop or gain body weight."
 
-        self.mm_ideal_weight = 'My perfect weight'
         self.mm_aim_percent = 'Weight progress'
         self.mm_settings = 'Settings'
 
@@ -22,11 +21,12 @@ class LangEnglish:
         self.s_timezone = 'Time zone'
         self.s_notification = 'Notification'
         self.s_language = 'Language'
+        self.s_best_weight = 'My perfect weight'
 
         self.s_lang_hi = 'Hi / Привет!'
         self.s_lang_set = 'English is set.'
-        self.s_russian = 'Русский'
-        self.s_english = 'English'
+        self.s_russian = '🇷🇺 Русский'
+        self.s_english = '🇬🇧 English'
 
         # settings -> time zone
 

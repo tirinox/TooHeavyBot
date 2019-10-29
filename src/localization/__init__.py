@@ -3,15 +3,10 @@ from localization.eng import LangEnglish
 from typing import Union
 
 
-class LangDummy:
-    KEY = 'dummy'
-    def __getattr__(self, item):
-        return item
-
-
 languages = (LangRussian, LangEnglish)
 language_instances = {lang.KEY: lang() for lang in languages}
+default_language_instance = language_instances[LangRussian.KEY]
 
 
 def get_localization(lang_name) -> Union[languages]:
-    return language_instances.get(lang_name, LangDummy())
+    return language_instances.get(lang_name, default_language_instance)

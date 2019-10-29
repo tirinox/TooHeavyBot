@@ -72,6 +72,8 @@ async def ask_aim_menu(io: DialogIO):
 
     lang = io.language
 
+    print(lang.ap_change_start)
+
     result = create_menu(io, lang.ap_menu, variants=[
         [(lang.ap_enter_today, 'enter_today_weight')],
         [

@@ -11,7 +11,7 @@ class LangRussian:
         # main menu
 
         self.hello = 'Привет! Я робот-тренер и помогу тебе достичь идеального веса (похудеть или набрать массу)!'
-        self.mm_ideal_weight = 'Мой идеальный вес'
+
         self.mm_aim_percent = 'Процент цели?'
         self.mm_settings = 'Настройки'
 
@@ -21,11 +21,12 @@ class LangRussian:
         self.s_timezone = 'Часовой пояс'
         self.s_notification = 'Уведомление'
         self.s_language = 'Язык'
+        self.s_best_weight = 'Мой идеальный вес'
 
         self.s_lang_hi = 'Hi / Привет!'
         self.s_lang_set = 'Установлен русский язык.'
-        self.s_russian = 'Русский'
-        self.s_english = 'English'
+        self.s_russian = '🇷🇺 Русский'
+        self.s_english = '🇬🇧 English'
 
         # settings -> time zone
 

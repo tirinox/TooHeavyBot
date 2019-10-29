@@ -4,6 +4,8 @@ import pytz
 from tasks.notify_weight import activate_notification, deactivate_notification
 from tasks.change_timezone import change_timezone
 from timezonefinder import TimezoneFinder
+from dialogs.best_weight import *
+
 
 tz_finder = TimezoneFinder(in_memory=True)
 
@@ -77,9 +79,8 @@ async def settings_menu(io: DialogIO):
 
     result = create_menu(io, lang.s_title,
                          variants=[
-                             [(lang.s_timezone, 1)],
-                             [(lang.s_notification, 2)],
-                             [(lang.s_language, 3)],
+                             [(lang.s_timezone, 1), (lang.s_notification, 2)],
+                             [(lang.s_language, 3), (lang.s_best_weight, 4)],
                              [(lang.back, 'back')]
                          ])
     if result == 1:
@@ -88,5 +89,7 @@ async def settings_menu(io: DialogIO):
         return io.push(ask_notification_time)
     elif result == 3:
         return io.push(ask_language)
+    elif result == 4:
+        return io.push(best_weight_entry)
     elif result == 'back':
         return io.back()
