@@ -5,7 +5,7 @@ from dialogs import *
 from chat.msg_io import get_message_handlers
 from chat.message_handler import MessageHandler
 import asyncio
-from aiogram.types import Message
+from aiogram.types import Message, Location
 from tasks import task_manager
 from tasks.delete_profile import delete_profile
 import threading
@@ -28,6 +28,8 @@ class FakeMessage(Message):
         # it know that globals is bad, but for local test it's OK!
         global last_keyboard_anwer_map
         last_keyboard_anwer_map = {}
+
+        print(text)
 
         if isinstance(reply_markup, ReplyKeyboardRemove):
             print('[keyboard removed]')
@@ -53,6 +55,18 @@ async def async_input(prompt):
     return await fut
 
 
+async def dispatch_message_to_handler(message: FakeMessage):
+    from_user = MagicMock()
+    from_user.id = USER_ID
+    message.from_user = from_user
+
+    await message_handler.handle(message)
+
+
+async def my_db(user_id):
+    await print_database(f'Profile:{user_id}:*')
+
+
 async def process_text_message(text_message):
     if text_message in ['/quit', '/exit']:
         return False
@@ -63,6 +77,14 @@ async def process_text_message(text_message):
     elif text_message.startswith('/kill'):
         user_id = int(text_message[5:].strip())
         await delete_profile(user_id)
+    elif text_message == '/me':
+        await my_db(USER_ID)
+    elif text_message.startswith('/loc'):
+        _, lat, lon = filter(bool, text_message.split(' '))
+        message = FakeMessage()
+        message.location = Location(latitude=float(lat),
+                                    longitude=float(lon))
+        await dispatch_message_to_handler(message)
     else:
         # translate number to actual item text
         if text_message in last_keyboard_anwer_map:
@@ -70,11 +92,7 @@ async def process_text_message(text_message):
             print(f'({text_message})')
 
         message = FakeMessage(text=text_message)
-        from_user = MagicMock()
-        from_user.id = USER_ID
-        message.from_user = from_user
-
-        await message_handler.handle(message)
+        await dispatch_message_to_handler(message)
     return True
 
 
@@ -103,6 +121,7 @@ if __name__ == '__main__':
     print('  Type /dbs [key_pattern] to view redis database.')
     print('  Type /kill <user_id> to delete the user.')
     print('  Type /reset to reset the dialog state.')
+    print('  Type /loc <latitude> <longitude> to send location.')
     print('\n')
 
     config = Config()

@@ -6,7 +6,6 @@ from tasks.change_timezone import change_timezone
 from timezonefinder import TimezoneFinder
 from dialogs.best_weight import *
 
-
 tz_finder = TimezoneFinder(in_memory=True)
 
 
@@ -16,11 +15,13 @@ async def ask_time_zone(io: DialogIO):
 
     prompt = lang.time_zone_prompt
 
+    kbd = [
+        [KeyboardButton(lang.send_location, request_location=True)],
+        [KeyboardButton(lang.back)]
+    ]
+
     if not io.asked:
-        io.ask(prompt, [
-            [KeyboardButton(lang.send_location, request_location=True)],
-            [KeyboardButton(lang.back)]
-        ])
+        io.ask(prompt, kbd)
     else:
         if io.text == lang.back:
             io.back()
@@ -34,7 +35,7 @@ async def ask_time_zone(io: DialogIO):
                 await change_timezone(io.profile, tz_name)
                 io.reply(lang.time_zone_ok(tz_name)).back()
         else:
-            io.ask(lang.time_zone_unknown_city)
+            io.ask(lang.time_zone_unknown_city, kbd)
 
 
 @sentence

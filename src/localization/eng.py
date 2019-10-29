@@ -38,7 +38,7 @@ class LangEnglish:
         self.time_zone_err_bad_loc = ('We was not able to detect time zone for your location. '
                                       'Enter the name of your city:')
         self.time_zone_ok = lambda tz_name: f'I detected your time zone: <b>{tz_name}</b>. Correct?\n'
-        self.time_zone_unknown_city = "Don't now this city..."
+        self.time_zone_unknown_city = "Don't know this city..."
         self.send_location = '📍 Send my location'
 
         # setting -> notification
