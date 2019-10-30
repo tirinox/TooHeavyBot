@@ -51,6 +51,8 @@ class LangRussian:
         self.s_not_on = lambda d_hh, d_mm: f'Напонимание установлено! Оно прозвучит через {d_hh} ч. {d_mm} мин.'
         self.s_not_err = f'Кажется, вы меня не так поняли! {self.s_not_ask_1}'
 
+        self.notification_weight = 'Пора бы внести вес, еще не внесли еще сегодня!'
+
         # service
 
         self.invalid_menu_option = "<pre>Неизвестная опция меню!</pre>"

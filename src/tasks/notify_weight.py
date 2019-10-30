@@ -14,8 +14,6 @@ KEY_LAST_SENT_TS = 'last_sent_ts'
 
 NOTIFICATION_COOLDOWN = parse_timespan_to_seconds('1m')
 
-NOTIFICATION_TEXT = 'Пора бы внести вес, еще не внесли еще сегодня!'
-
 
 async def activate_notification(profile: Profile, hh, mm):
     await deactivate_notification(profile)
@@ -62,8 +60,10 @@ async def notify_one_user(bot: TelegramBot, user_id, now_ts):
     last_ts = 0 if last_ts is None else int(last_ts)
 
     if now_ts > last_ts + NOTIFICATION_COOLDOWN:
+        tr = await profile.get_translator()
+
         await profile.set_prop(KEY_LAST_SENT_TS, now_ts)
-        await bot.send_text(user_id, NOTIFICATION_TEXT)
+        await bot.send_text(user_id, tr.notification_weight)
 
 
 async def notify_all_by_time(bot: TelegramBot):

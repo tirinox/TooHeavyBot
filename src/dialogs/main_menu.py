@@ -7,7 +7,7 @@ from chat.msg_io import *
 async def main_menu(io: DialogIO):
     prompt = io.language.hello
 
-    lang = await io.profile.get_prop(Profile.LANGUAGE_KEY)
+    lang = await io.profile.get_language()
     if lang is None:
         return io.push(ask_language)
 

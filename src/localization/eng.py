@@ -43,12 +43,15 @@ class LangEnglish:
 
         # setting -> notification
 
-        self.s_not_dont = 'Не уведомлять'
-        self.s_not_ask_1 = 'Введите время в формате ЧЧ:ММ или ЧЧ ММ - 24 часа. Например: "8:00" или "12 05".'
-        self.s_not_ask = f'Давайте настроим напонимание о том, что вам пора внести вес. {self.s_not_ask_1}'
-        self.s_not_off = 'Напонимание выключено!'
-        self.s_not_on = lambda d_hh, d_mm: f'Напонимание установлено! Оно прозвучит через {d_hh} ч. {d_mm} мин.'
-        self.s_not_err = f'Кажется, вы меня не так поняли! {self.s_not_ask_1}'
+        self.s_not_dont = "Don't notify me"
+        self.s_not_ask_1 = 'Please enter the time in HH:MM or HH MM format. For an instance 8:05 or 10 30:'
+        self.s_not_ask = f"Let's set up a notification. So you don't forget to add your weight everyday." \
+                         f" {self.s_not_ask_1}"
+        self.s_not_off = 'Notification is turned off!'
+        self.s_not_on = lambda d_hh, d_mm: f'Notification is turned on! You will get it in {d_hh} h. {d_mm} min.'
+        self.s_not_err = f'It seems you did not get what I say. {self.s_not_ask_1}'
+
+        self.notification_weight = "Hey! It's hight time to enter your weight today!"
 
         # service
 
@@ -57,24 +60,24 @@ class LangEnglish:
 
         # aim percent
 
-        self.ap_prompt_today_weight = 'Enter your weight today in kg:'
+        self.ap_prompt_today_weight = 'Enter your weight today in KG:'
         self.ap_prompt_weight_err = 'Have to be a number between 30 and 500!'
-        self.ap_drop_weight = lambda delta: f'You have dropped {delta:0.2f} кг since yesterday.\n'
-        self.ap_gain_weight = lambda delta: f'You have gained {delta:0.2f} кг since yesterday.\n'
+        self.ap_drop_weight = lambda delta: f'You have dropped {delta:0.2f} KG since yesterday.\n'
+        self.ap_gain_weight = lambda delta: f'You have gained {delta:0.2f} KG since yesterday.\n'
         self.ap_same_weight = 'You weight has not changed.\n'
         self.ap_progress = lambda percent: f'\nYour progress is\n<b>{percent:.2f} %</b>\n'
-        self.ap_prompt_start_weight = 'Please enter your start weight (it is 0 % of aim) kg:'
-        self.ap_prompt_aim_weight = 'Please enter your target weight (it is 100 %) kg:'
+        self.ap_prompt_start_weight = 'Please enter your start weight (it is 0 % of aim) KG:'
+        self.ap_prompt_aim_weight = 'Please enter your target weight (it is 100 %) KG:'
         self.ap_menu = "I will calculate your grade of progress."
         self.ap_enter_today = 'Enter weight today'
-        self.ap_change_start = lambda s: f'Edit the start ({s:.1f} kg)'
-        self.ap_change_aim = lambda s: f'Edit the aim ({s:.1f} kg)'
+        self.ap_change_start = lambda s: f'Edit the start ({s:.1f} KG)'
+        self.ap_change_aim = lambda s: f'Edit the aim ({s:.1f} KG)'
 
         # best weight
 
         self.bw_prompt_height = 'What is your height in cm?'
         self.bw_prompt_height_err = 'Must be a number between 50 and 300!'
-        self.bw_result = lambda result: f'Your perfect weight is {result} kg.'
+        self.bw_result = lambda result: f'Your perfect weight is {result} KG.'
         self.bw_prompt_sex = "What is your sex?"
         self.bw_male = 'Male'
         self.bw_female = 'Female'

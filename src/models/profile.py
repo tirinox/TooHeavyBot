@@ -3,6 +3,7 @@ from util.date import now_tsi, now_local_dt
 import json
 import pytz
 from datetime import datetime
+from localization import get_localization
 
 
 class Profile(ModelBase):
@@ -42,6 +43,16 @@ class Profile(ModelBase):
             await self.redis.delete(key)
 
     # ----
+
+    async def get_language(self):
+        return await self.get_prop(self.LANGUAGE_KEY)
+
+    async def set_language(self, lang):
+        await self.set_prop(self.LANGUAGE_KEY, lang)
+
+    async def get_translator(self):
+        lang_name = await self.get_language()
+        return get_localization(lang_name)
 
     async def dialog_state(self):
         return await self.get_prop(self.DIALOG_STATE_KEY, as_json=True)

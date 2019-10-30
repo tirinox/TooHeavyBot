@@ -63,7 +63,7 @@ class DialogIO:
         self._lang = get_localization(lang)
 
     async def change_language(self, code):
-        await self.profile.set_prop(Profile.LANGUAGE_KEY, code)
+        await self.profile.set_language(code)
         self.language = code
 
     def reply(self, text: str, keyboard=None):

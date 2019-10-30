@@ -38,7 +38,7 @@ class MessageHandler:
 
         io_obj = DialogIO(message, profile, message.text, dialog_state)
         io_obj.location = message.location
-        io_obj.language = await profile.get_prop(Profile.LANGUAGE_KEY)
+        io_obj.language = await profile.get_language()
 
         await self.check_if_command(io_obj)
 
