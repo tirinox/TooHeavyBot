@@ -26,3 +26,7 @@ class TimePoint(ModelBase):
     async def save(self):
         await DB().redis.set(self.key, json.dumps(self.value))
         return self
+
+    def __repr__(self):
+        return f'TimePoint({self.series_name}, user_id={self.user_id}, ' \
+               f'year={self.date.year}, month={self.date.month}, day={self.date.day})'

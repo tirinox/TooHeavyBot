@@ -2,6 +2,7 @@ import asyncio
 from util.config import Config
 import logging
 import tasks.notify_weight
+import tasks.weight_control
 
 
 def periodic_task_seconds():

@@ -69,7 +69,7 @@ class Profile(ModelBase):
     async def get_time_zone(self):
         return await self.get_prop(self.TIME_ZONE_KEY)
 
-    async def get_their_time(self, dt: datetime):
+    async def get_their_time(self, dt: datetime) -> datetime:
         try:
             tz = pytz.timezone(await self.get_time_zone())
         except pytz.UnknownTimeZoneError:

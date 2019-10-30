@@ -77,3 +77,6 @@ class MessageHandler:
                     await message.reply(reply_text, reply=False,
                                         reply_markup=io_obj.out_keyboard,
                                         disable_notification=True)
+
+        if io_obj.out_image:
+            await message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)

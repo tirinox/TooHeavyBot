@@ -72,6 +72,7 @@ class LangEnglish:
         self.ap_enter_today = 'Enter weight today'
         self.ap_change_start = lambda s: f'Edit the start ({s:.1f} KG)'
         self.ap_change_aim = lambda s: f'Edit the aim ({s:.1f} KG)'
+        self.ap_chart_name = 'Weight chart ☝️'
 
         # best weight
 

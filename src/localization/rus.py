@@ -72,6 +72,7 @@ class LangRussian:
         self.ap_enter_today = 'Внести вес сегодня'
         self.ap_change_start = lambda s: f'Изменить старт ({s:.1f} кг)'
         self.ap_change_aim = lambda s: f'Изменить цель ({s:.1f} кг)'
+        self.ap_chart_name = 'График веса ☝️'
 
         # best weight
 

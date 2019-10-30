@@ -1,6 +1,6 @@
 from chat.msg_io import *
 from util import try_parse_float
-from tasks.weight_control import report_weight, get_yesterday_weight
+from tasks.weight_control import *
 
 
 def aim_percent_formula(current, ideal, start):
@@ -38,6 +38,11 @@ async def ask_current_weight(io: DialogIO):
                 else:
                     io.add(lang.ap_same_weight)
 
+            # grapH!
+            pts = await get_weight_points_for_profile(io.profile)
+            png = await plot_weight_graph(pts)
+            io.send_image(png, lang.ap_chart_name)
+
         io.back()
 
 
@@ -71,8 +76,6 @@ async def ask_aim_menu(io: DialogIO):
         return io.push(ask_weight_aim)
 
     lang = io.language
-
-    print(lang.ap_change_start)
 
     result = create_menu(io, lang.ap_menu, variants=[
         [(lang.ap_enter_today, 'enter_today_weight')],

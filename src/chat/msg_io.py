@@ -3,6 +3,7 @@ from models.profile import Profile
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
 import logging
 from localization import *
+from io import BytesIO
 
 
 NEW_LINE = '\n'
@@ -48,6 +49,8 @@ class DialogIO:
 
     out_keyboard: Union[ReplyKeyboardMarkup, ReplyKeyboardRemove, None] = ReplyKeyboardRemove()
     out_text: str = None
+    out_image: BytesIO = None
+    out_image_caption: str = None
     join_messages: bool = True
 
     _lang: Union[languages] = None
@@ -73,6 +76,11 @@ class DialogIO:
                 variants = normalize_variants(keyboard)
                 keyboard, _ = make_keyboard_and_mapping(variants, row_width=1)
             self.out_keyboard = keyboard
+        return self
+
+    def send_image(self, img: BytesIO, caption=None):
+        self.out_image = img
+        self.out_image_caption = caption
         return self
 
     def add(self, text: str):

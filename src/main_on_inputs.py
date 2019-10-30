@@ -16,7 +16,11 @@ last_keyboard_anwer_map = {}
 
 
 async def testus():
-    pass
+    from tasks.weight_control import get_weight_points_for_profile
+    uid = 192398802
+    tps = await get_weight_points_for_profile(Profile(uid))
+    for tp in tps:
+        print(tp)
 
 
 class FakeMessage(Message):
