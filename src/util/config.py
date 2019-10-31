@@ -71,7 +71,7 @@ class Config(ConfigSubtree, metaclass=Singleton):
     def __init__(self, default_config_file='.config.yml', config=None):
         super().__init__(config)
         if config is None:
-            if len(sys.argv) == 2:
+            if len(sys.argv) >= 2:
                 config_file = sys.argv[1]
             else:
                 config_file = default_config_file

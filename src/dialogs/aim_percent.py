@@ -1,15 +1,5 @@
 from chat.msg_io import *
-from util import try_parse_float
 from tasks.weight_control import *
-
-
-def aim_percent_formula(current, ideal, start):
-    p = (1.0 - (current - ideal) / (start - ideal)) * 100.0
-    return round(p, 2)
-
-
-def weight_format(w):
-    return f'{w:.1f}'
 
 
 @sentence
@@ -20,15 +10,13 @@ async def ask_current_weight(io: DialogIO):
     if weight == CANCELLED:
         io.back()
     elif weight is not None:
-        weight_start = try_parse_float(await io.profile.get_prop('weight_start'))
-        weight_aim = try_parse_float(await io.profile.get_prop('weight_aim'))
-        if weight_start and weight_aim:
-            percent = aim_percent_formula(weight, weight_aim, weight_start)
-            io.reply(lang.ap_progress(percent))
+        wp = WeightProfile(io.profile, weight)
 
-            await report_weight(io.profile, weight, percent)
+        reported = await wp.report_aim_percent()
+        if reported:
+            io.reply(lang.ap_progress(wp.aim_percent))
 
-            y_weight = await get_yesterday_weight(io.profile)
+            y_weight = await wp.get_yesterday_weight()
             if y_weight is not None:
                 delta = abs(y_weight - weight)
                 if y_weight > weight:
@@ -38,9 +26,8 @@ async def ask_current_weight(io: DialogIO):
                 else:
                     io.add(lang.ap_same_weight)
 
-            # grapH!
-            pts = await get_weight_points_for_profile(io.profile)
-            png = await plot_weight_graph(pts)
+            # graph
+            png = await wp.plot_weight_graph(n_days=30)
             io.send_image(png, lang.ap_chart_name)
 
         io.back()
@@ -51,7 +38,7 @@ async def ask_weight_start(io: DialogIO):
     weight = ask_for_number(io, io.language.ap_prompt_start_weight,
                             40, 500, io.language.ap_prompt_weight_err)
     if weight is not None:
-        await io.profile.set_prop('weight_start', weight)
+        await WeightProfile(io.profile).set_weight_start(weight)
         io.back()
 
 
@@ -60,19 +47,20 @@ async def ask_weight_aim(io: DialogIO):
     weight = ask_for_number(io, io.language.ap_prompt_aim_weight,
                             40, 500, io.language.ap_prompt_weight_err)
     if weight is not None:
-        await io.profile.set_prop('weight_aim', weight)
+        await WeightProfile(io.profile).set_weight_aim(weight)
         io.back()
 
 
 @sentence
 async def ask_aim_menu(io: DialogIO):
-    weight_start = try_parse_float(await io.profile.get_prop('weight_start'))
+    wp = WeightProfile(io.profile)
 
-    if not weight_start:
+    weight_start = await wp.get_weight_start()
+    if weight_start is None:
         return io.push(ask_weight_start)
 
-    weight_aim = try_parse_float(await io.profile.get_prop('weight_aim'))
-    if not weight_aim:
+    weight_aim = await wp.get_weight_aim()
+    if weight_aim is None:
         return io.push(ask_weight_aim)
 
     lang = io.language

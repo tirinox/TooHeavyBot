@@ -1,3 +1,5 @@
+import typing
+
 from util.config import Config
 from util.database import DB, print_database
 from unittest.mock import MagicMock
@@ -5,7 +7,7 @@ from dialogs import *
 from chat.msg_io import get_message_handlers
 from chat.message_handler import MessageHandler
 import asyncio
-from aiogram.types import Message, Location
+from aiogram.types import Message, Location, base, InlineKeyboardMarkup, ForceReply
 from tasks import task_manager
 from tasks.delete_profile import delete_profile
 import threading
@@ -16,9 +18,9 @@ last_keyboard_anwer_map = {}
 
 
 async def testus():
-    from tasks.weight_control import get_weight_points_for_profile
-    uid = 192398802
-    tps = await get_weight_points_for_profile(Profile(uid))
+    from tasks.weight_control import WeightProfile
+    wp = WeightProfile(Profile(192398802))
+    tps = await wp.get_weight_points_for_profile(30)
     for tp in tps:
         print(tp)
 
@@ -44,6 +46,17 @@ class FakeMessage(Message):
                     print(f'{i}. {button.text}')
                     last_keyboard_anwer_map[str(i)] = button.text
                     i += 1
+        return self
+
+    async def answer_photo(self, photo: typing.Union[base.InputFile, base.String],
+                           caption: typing.Union[base.String, None] = None,
+                           parse_mode: typing.Union[base.String, None] = None,
+                           disable_notification: typing.Union[base.Boolean, None] = None,
+                           reply_markup: typing.Union[InlineKeyboardMarkup,
+                                                      ReplyKeyboardMarkup,
+                                                      ReplyKeyboardRemove,
+                                                      ForceReply, None] = None, reply: base.Boolean = False) -> Message:
+        print('[Photo]')
         return self
 
 
