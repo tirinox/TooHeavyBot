@@ -73,6 +73,8 @@ class LangRussian:
         self.ap_change_start = lambda s: f'Изменить старт ({s:.1f} кг)'
         self.ap_change_aim = lambda s: f'Изменить цель ({s:.1f} кг)'
         self.ap_chart_name = 'График веса ☝️'
+        self.ap_weight_label = 'Вес, кг'
+        self.ap_percent_label = 'Процент цели, %'
 
         # best weight
 

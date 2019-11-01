@@ -73,6 +73,8 @@ class LangEnglish:
         self.ap_change_start = lambda s: f'Edit the start ({s:.1f} KG)'
         self.ap_change_aim = lambda s: f'Edit the aim ({s:.1f} KG)'
         self.ap_chart_name = 'Weight chart ☝️'
+        self.ap_weight_label = 'Weight, KG'
+        self.ap_percent_label = 'Progress, %'
 
         # best weight
 

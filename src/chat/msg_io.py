@@ -4,6 +4,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, Key
 import logging
 from localization import *
 from io import BytesIO
+from typing import Union
 
 
 NEW_LINE = '\n'

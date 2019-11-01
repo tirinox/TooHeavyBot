@@ -13,41 +13,13 @@ class Profile(ModelBase):
     LAST_ACTIVITY_KEY = 'last_activity'
     LANGUAGE_KEY = 'lang'
 
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.redis = DB().redis
-
-    def key_for_prop(self, prop):
-        return self.key(self.user_id, prop)
-
-    async def get_prop(self, prop, as_json=False):
-        result = await self.redis.get(self.key_for_prop(prop))
-        if as_json:
-            try:
-                return json.loads(result)
-            except (json.JSONDecodeError, TypeError):
-                return {}
-        else:
-            return result
-
-    async def set_prop(self, prop, value, expire=0):
-        if isinstance(value, list) or isinstance(value, dict) or isinstance(value, tuple):
-            value = json.dumps(value)
-        return await self.redis.set(self.key_for_prop(prop), value, expire=expire)
-
-    async def del_prop(self, prop):
-        await self.redis.delete(self.key_for_prop(prop))
-
-    async def delete(self):
-        for key in await DB().scan(self.key_for_prop('*')):
-            await self.redis.delete(key)
-
     # ----
 
     async def get_language(self):
         return await self.get_prop(self.LANGUAGE_KEY)
 
     async def set_language(self, lang):
+        self._language = lang
         await self.set_prop(self.LANGUAGE_KEY, lang)
 
     async def get_translator(self):

@@ -2,11 +2,16 @@ from chat.msg_io import *
 from tasks.weight_control import *
 
 
+MIN_WEIGHT = 40
+MAX_WEIGHT = 500
+GRAPH_DAYS = 30
+
+
 @sentence
 async def ask_current_weight(io: DialogIO):
     lang = io.language
     weight = ask_for_number(io, lang.ap_prompt_today_weight,
-                            40, 500, lang.ap_prompt_weight_err)
+                            MIN_WEIGHT, MAX_WEIGHT, lang.ap_prompt_weight_err)
     if weight == CANCELLED:
         io.back()
     elif weight is not None:
@@ -27,7 +32,7 @@ async def ask_current_weight(io: DialogIO):
                     io.add(lang.ap_same_weight)
 
             # graph
-            png = await wp.plot_weight_graph(n_days=30)
+            png = await wp.plot_weight_graph(n_days=GRAPH_DAYS)
             io.send_image(png, lang.ap_chart_name)
 
         io.back()
@@ -36,7 +41,7 @@ async def ask_current_weight(io: DialogIO):
 @sentence
 async def ask_weight_start(io: DialogIO):
     weight = ask_for_number(io, io.language.ap_prompt_start_weight,
-                            40, 500, io.language.ap_prompt_weight_err)
+                            MIN_WEIGHT, MAX_WEIGHT, io.language.ap_prompt_weight_err)
     if weight is not None:
         await WeightProfile(io.profile).set_weight_start(weight)
         io.back()
@@ -45,7 +50,7 @@ async def ask_weight_start(io: DialogIO):
 @sentence
 async def ask_weight_aim(io: DialogIO):
     weight = ask_for_number(io, io.language.ap_prompt_aim_weight,
-                            40, 500, io.language.ap_prompt_weight_err)
+                            MIN_WEIGHT, MAX_WEIGHT, io.language.ap_prompt_weight_err)
     if weight is not None:
         await WeightProfile(io.profile).set_weight_aim(weight)
         io.back()

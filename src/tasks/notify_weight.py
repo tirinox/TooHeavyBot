@@ -22,13 +22,13 @@ async def activate_notification(profile: Profile, hh, mm):
 
     tz = await profile.get_time_zone()
     if tz is None:
-        logging.error(f'time zone is not set for user {profile.user_id}!')
+        logging.error(f'time zone is not set for user {profile.ident}!')
         return
 
     local_hh, local_mm = convert_time_hh_mm_to_local(hh, mm, tz)
 
     tr = TimeTracker(KEY_WEIGHT_TRACKER, local_hh, local_mm)
-    await tr.register_user(profile.user_id)
+    await tr.register_user(profile.ident)
 
     return delta_to_next_hh_mm(local_hh, local_mm)
 
@@ -36,7 +36,7 @@ async def activate_notification(profile: Profile, hh, mm):
 async def deactivate_notification(profile: Profile):
     tz = await profile.get_time_zone()
     if tz is None:
-        logging.error(f'time zone is not set for user {profile.user_id}!')
+        logging.error(f'time zone is not set for user {profile.ident}!')
         return
 
     current_time_str = await profile.get_prop(KEY_NOTIFICATION_TIME)
@@ -49,7 +49,7 @@ async def deactivate_notification(profile: Profile):
         local_hh, local_mm = convert_time_hh_mm_to_local(hh, mm, tz)
 
         tr = TimeTracker(KEY_WEIGHT_TRACKER, local_hh, local_mm)
-        await tr.unregister_user(profile.user_id)
+        await tr.unregister_user(profile.ident)
     except (TypeError, ValueError, AttributeError):
         ...
 

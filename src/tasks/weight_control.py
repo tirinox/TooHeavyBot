@@ -73,13 +73,13 @@ class WeightProfile:
         their_now = await self.p.get_their_now()
 
         their_yesterday = their_now - timedelta(days=1)
-        tp = WeightPoint(self.p.user_id, their_yesterday)
+        tp = WeightPoint(self.p.ident, their_yesterday)
         await tp.load()
         return tp.weight
 
     async def report_weight(self):
         their_now = await self.p.get_their_now()
-        tp = WeightPoint(self.p.user_id, their_now,
+        tp = WeightPoint(self.p.ident, their_now,
                          self.weight, self.aim_percent,
                          their_now.timestamp())
         await tp.save()
@@ -89,7 +89,7 @@ class WeightProfile:
 
         tasks = []
         for _ in range(n_days):
-            tp = WeightPoint(self.p.user_id, today)
+            tp = WeightPoint(self.p.ident, today)
             tasks.append(tp.load())
             today -= timedelta(days=1)
 
@@ -98,7 +98,7 @@ class WeightProfile:
         return [tp for tp in tps if tp.value]
 
     @staticmethod
-    def _plot_weight_graph(tps: List[WeightPoint], start_weight, aim_weight):
+    def _plot_weight_graph(tps: List[WeightPoint], start_weight, aim_weight, is_percent, y_label):
         if len(tps) < 2:
             return None
 
@@ -106,13 +106,15 @@ class WeightProfile:
 
         xs, ys = [], []
         for tp in tps:
-            w = tp.weight
+            w = tp.percent if is_percent else tp.weight
             if w:
                 xs.append(tp.date)
                 ys.append(w)
 
         plt.xticks(rotation=30)
         plt.plot(xs, ys, marker='*')
+
+        plt.ylabel(y_label)
 
         if start_weight:
             plt.axhline(y=start_weight, color='r', linestyle='--')
@@ -130,6 +132,17 @@ class WeightProfile:
         start_weight = await self.get_weight_start()
         aim_weight = await self.get_weight_aim()
 
+        tr = await self.p.get_translator()
+        y_label = tr.ap_weight_label
+
         tps = await self.get_weight_points_for_profile(n_days)
         return await asyncio.get_event_loop().run_in_executor(
-            None, self._plot_weight_graph, tps, start_weight, aim_weight)
+            None, self._plot_weight_graph, tps, start_weight, aim_weight, False, y_label)
+
+    async def plot_percent_graph(self, n_days=30):
+        tr = await self.p.get_translator()
+        y_label = tr.ap_percent_label
+
+        tps = await self.get_weight_points_for_profile(n_days)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self._plot_weight_graph, tps, 0, 100, True, y_label)
