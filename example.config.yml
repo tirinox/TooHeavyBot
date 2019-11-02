@@ -13,3 +13,7 @@ debug: true
 
 periodic:
   period: 1m
+
+weight_aim:
+  calc:
+    smooth_period: 4

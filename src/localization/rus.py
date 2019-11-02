@@ -62,10 +62,12 @@ class LangRussian:
 
         self.ap_prompt_today_weight = 'Введите ваш вес сегодня в кг:'
         self.ap_prompt_weight_err = 'Должно быть число от 40 до 500!'
-        self.ap_drop_weight = lambda delta: f'Вы похудели на {delta:0.2f} кг со вчера.\n'
-        self.ap_gain_weight = lambda delta: f'Вы поправились на {delta:0.2f} кг со вчера.\n'
-        self.ap_same_weight = 'Ваш вес не изменился со вчера.\n'
-        self.ap_progress = lambda percent: f'\nВаш прогресс:\n<b>{percent:.2f} %</b>\n'
+        self.ap_aim_eq_start_err = 'Начальный вес не может быть равен конечному.'
+        self.ap_drop_weight = lambda delta: f'Вы похудели на {delta:0.2f} кг со вчера.'
+        self.ap_gain_weight = lambda delta: f'Вы поправились на {delta:0.2f} кг со вчера.'
+        self.ap_same_weight = 'Ваш вес не изменился со вчера.'
+        self.ap_progress = lambda percent: f'\nВаш прогресс:\n<b>{percent:.2f} %</b>'
+        self.ap_you_forgot = "Кажется, вы не вносили вчера вес."
         self.ap_prompt_start_weight = 'Введите ваш начальный вес в кг. Это будет 0 % цели:'
         self.ap_prompt_aim_weight = 'Введите ваш целевой вес в кг. Это будет 100 % цели:'
         self.ap_menu = "Мы посчитаем процент вашего прогресса:"

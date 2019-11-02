@@ -19,7 +19,7 @@ async def ask_current_weight(io: DialogIO):
 
         reported = await wp.report_aim_percent()
         if reported:
-            io.reply(lang.ap_progress(wp.aim_percent))
+            io.reply(lang.ap_progress(wp.aim_percent)).nl()
 
             y_weight = await wp.get_yesterday_weight()
             if y_weight is not None:
@@ -30,6 +30,8 @@ async def ask_current_weight(io: DialogIO):
                     io.add(lang.ap_gain_weight(delta))
                 else:
                     io.add(lang.ap_same_weight)
+            else:
+                io.add(lang.ap_you_forgot)
 
             # graph
             png = await wp.plot_weight_graph(n_days=GRAPH_DAYS)
@@ -52,8 +54,13 @@ async def ask_weight_aim(io: DialogIO):
     weight = ask_for_number(io, io.language.ap_prompt_aim_weight,
                             MIN_WEIGHT, MAX_WEIGHT, io.language.ap_prompt_weight_err)
     if weight is not None:
-        await WeightProfile(io.profile).set_weight_aim(weight)
-        io.back()
+        weight_start = await WeightProfile(io.profile).get_weight_start()
+
+        if weight_start == weight:
+            io.reply(io.language.ap_aim_eq_start_err)
+        else:
+            await WeightProfile(io.profile).set_weight_aim(weight)
+            io.back()
 
 
 @sentence

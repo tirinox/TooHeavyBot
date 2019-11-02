@@ -52,7 +52,7 @@ class DialogIO:
     out_text: str = None
     out_image: BytesIO = None
     out_image_caption: str = None
-    join_messages: bool = True
+    new_message: bool = True
 
     _lang: Union[languages] = None
 
@@ -87,6 +87,9 @@ class DialogIO:
     def add(self, text: str):
         self.out_text += text
         return self
+
+    def nl(self):
+        return self.add('\n')
 
     def set(self, name, value):
         self.state[name] = value

@@ -31,8 +31,15 @@ class MessageHandler:
             return self.initial_handler
         return self.handlers[handler_name]
 
-    async def handle(self, message: Message):
+    async def _send_texts(self, io: DialogIO, texts: list):
+        if texts:
+            text_sum = NEW_LINE.join(texts)
+            await io.message.reply(text_sum,
+                                   reply=False,
+                                   reply_markup=io.out_keyboard,
+                                   disable_notification=True)
 
+    async def handle(self, message: Message):
         profile = Profile(message.from_user.id)
         dialog_state = await profile.dialog_state()
 
@@ -53,10 +60,19 @@ class MessageHandler:
             if io_obj.out_text:
                 all_reply_texts.append(io_obj.out_text)
 
-            handler = self.find_handler(io_obj.state)
+            if io_obj.out_image or io_obj.new_message:
+                await self._send_texts(io_obj, all_reply_texts)
+                if io_obj.out_image:
+                    await message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)
+                    io_obj.out_image = None
+                    io_obj.out_image_caption = None
+                all_reply_texts = []
+                io_obj.new_message = False
 
             if io_obj.asked:
                 break
+
+            handler = self.find_handler(io_obj.state)
 
             jump_no += 1
         else:
@@ -64,19 +80,4 @@ class MessageHandler:
 
         await profile.set_dialog_state(io_obj.state)
         await profile.activity()
-
-        if all_reply_texts:
-            if io_obj.join_messages:
-                text_sum = NEW_LINE.join(all_reply_texts)
-                await message.reply(text_sum,
-                                    reply=False,
-                                    reply_markup=io_obj.out_keyboard,
-                                    disable_notification=True)
-            else:
-                for reply_text in all_reply_texts:
-                    await message.reply(reply_text, reply=False,
-                                        reply_markup=io_obj.out_keyboard,
-                                        disable_notification=True)
-
-        if io_obj.out_image:
-            await message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)
+        await self._send_texts(io_obj, all_reply_texts)

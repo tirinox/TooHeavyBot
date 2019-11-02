@@ -62,10 +62,12 @@ class LangEnglish:
 
         self.ap_prompt_today_weight = 'Enter your weight today in KG:'
         self.ap_prompt_weight_err = 'Have to be a number between 30 and 500!'
-        self.ap_drop_weight = lambda delta: f'You have dropped {delta:0.2f} KG since yesterday.\n'
-        self.ap_gain_weight = lambda delta: f'You have gained {delta:0.2f} KG since yesterday.\n'
-        self.ap_same_weight = 'You weight has not changed.\n'
-        self.ap_progress = lambda percent: f'\nYour progress is\n<b>{percent:.2f} %</b>\n'
+        self.ap_aim_eq_start_err = 'Start weight must not be equal to target weight.'
+        self.ap_drop_weight = lambda delta: f'You have dropped {delta:0.2f} KG since yesterday.'
+        self.ap_gain_weight = lambda delta: f'You have gained {delta:0.2f} KG since yesterday.'
+        self.ap_same_weight = "You weight has not changed."
+        self.ap_you_forgot = "It seems, you didn't enter your weight yesterday."
+        self.ap_progress = lambda percent: f'\nYour progress is\n<b>{percent:.2f} %</b>'
         self.ap_prompt_start_weight = 'Please enter your start weight (it is 0 % of aim) KG:'
         self.ap_prompt_aim_weight = 'Please enter your target weight (it is 100 %) KG:'
         self.ap_menu = "I will calculate your grade of progress."

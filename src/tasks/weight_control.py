@@ -38,6 +38,7 @@ class WeightProfile:
         self.p = p
         self.weight = weight
         self.aim_percent = 0.0
+        self.tps = []
 
     async def get_weight_start(self):
         return try_parse_float(await self.p.get_prop('weight_start'))
@@ -93,9 +94,12 @@ class WeightProfile:
             tasks.append(tp.load())
             today -= timedelta(days=1)
 
-        tps = await asyncio.gather(*tasks)
+        self.tps = await asyncio.gather(*tasks)
 
-        return [tp for tp in tps if tp.value]
+        return [tp for tp in self.tps if tp.value]
+
+    def __len__(self):
+        return len(self.tps)
 
     @staticmethod
     def _plot_weight_graph(tps: List[WeightPoint], start_weight, aim_weight, is_percent, y_label):
