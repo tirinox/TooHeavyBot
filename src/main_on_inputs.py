@@ -1,5 +1,4 @@
 import typing
-
 from util.config import Config
 from util.database import DB, print_database
 from unittest.mock import MagicMock
@@ -9,6 +8,7 @@ from chat.message_handler import MessageHandler
 import asyncio
 from aiogram.types import Message, Location, base, InlineKeyboardMarkup, ForceReply
 from tasks import task_manager
+from tasks.notify_weight import *
 from tasks.delete_profile import delete_profile
 import threading
 
@@ -18,11 +18,7 @@ last_keyboard_anwer_map = {}
 
 
 async def testus():
-    from tasks.weight_control import WeightProfile
-    wp = WeightProfile(Profile(192398802))
-    tps = await wp.get_weight_points_for_profile(30)
-    for tp in tps:
-        print(tp)
+    ...
 
 
 class FakeMessage(Message):

@@ -1,5 +1,6 @@
 from chat.msg_io import *
 from util.config import Config
+from tasks.notify_weight import fix_bad_notifications
 
 
 START_COMMAND = '/start'
@@ -26,6 +27,7 @@ class MessageHandler:
         ...
 
     async def handle_service(self, io: DialogIO):
+        await fix_bad_notifications()
         await io.message.reply('Service done!')
 
     async def check_if_command(self, io: DialogIO):

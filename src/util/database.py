@@ -70,7 +70,7 @@ class ModelBase:
     async def del_prop(self, prop):
         await self.redis.delete(self.key_for_prop(prop))
 
-    async def delete(self):
+    async def delete_all(self):
         for key in await DB().scan(self.key_for_prop('*')):
             await self.redis.delete(key)
 
