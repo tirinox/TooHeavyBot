@@ -8,6 +8,10 @@ db:
     url: 'redis://thb_redis:6379/7'
     db: 7
 
+admin:
+  list:
+    - 123
+
 # set false for production!
 debug: true
 

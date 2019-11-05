@@ -1,4 +1,10 @@
 from chat.msg_io import *
+from util.config import Config
+
+
+START_COMMAND = '/start'
+RESET_COMMAND = '/reset'
+SERVICE_COMMAND = '/service'
 
 
 class MessageHandler:
@@ -11,8 +17,16 @@ class MessageHandler:
         assert initial_handler
         self.initial_handler = initial_handler
 
+        self.admins = list(map(str, Config().get('admin.list', [])))
+
+    def is_admin(self, io: DialogIO):
+        return str(io.message.from_user.id) in self.admins
+
     async def handle_start(self, io: DialogIO, code: str):
         ...
+
+    async def handle_service(self, io: DialogIO):
+        await io.message.reply('Service done!')
 
     async def check_if_command(self, io: DialogIO):
         text = str(io.text)
@@ -22,6 +36,11 @@ class MessageHandler:
         elif text.startswith(RESET_COMMAND):
             io.state = {}
             await io.message.reply('RESET DONE!')
+        elif text.startswith(SERVICE_COMMAND) and self.is_admin(io):
+            await self.handle_service(io)
+        else:
+            return False
+        return True
 
     def find_handler(self, state: dict):
         handler_name = state.get(CURRENT_FUNCTION_KEY, None)
@@ -47,7 +66,10 @@ class MessageHandler:
         io_obj.location = message.location
         io_obj.language = await profile.get_language()
 
-        await self.check_if_command(io_obj)
+        await profile.activity()
+
+        if await self.check_if_command(io_obj):
+            return
 
         all_reply_texts = []
 
@@ -79,5 +101,4 @@ class MessageHandler:
             logging.error(f'handle recursion detected!')
 
         await profile.set_dialog_state(io_obj.state)
-        await profile.activity()
         await self._send_texts(io_obj, all_reply_texts)
