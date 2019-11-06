@@ -61,7 +61,7 @@ async def notify_one_user(bot: TelegramBot, user_id, now_ts):
     wp = WeightProfile(profile)
 
     today_weight = await wp.get_today_weight()
-    if today_weight is None:
+    if today_weight is not None:
         # he has entered weight for today -> skip
         return
 
