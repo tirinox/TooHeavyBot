@@ -6,6 +6,7 @@ import logging
 from tzlocal import get_localzone
 from datetime import datetime
 from chat.bot_telegram import TelegramBot
+from tasks.weight_control import WeightProfile
 import asyncio
 
 
@@ -57,6 +58,13 @@ async def deactivate_notification(profile: Profile):
 
 async def notify_one_user(bot: TelegramBot, user_id, now_ts):
     profile = Profile(user_id)
+    wp = WeightProfile(profile)
+
+    today_weight = await wp.get_today_weight()
+    if today_weight is None:
+        # he has entered weight for today -> skip
+        return
+
     last_ts = await profile.get_prop(KEY_LAST_SENT_TS)
     last_ts = 0 if last_ts is None else int(last_ts)
 

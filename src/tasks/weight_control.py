@@ -71,10 +71,15 @@ class WeightProfile:
         return False
 
     async def get_yesterday_weight(self):
-        their_now = await self.p.get_their_now()
+        return await self.get_other_day_weight(-1)
 
-        their_yesterday = their_now - timedelta(days=1)
-        tp = WeightPoint(self.p.ident, their_yesterday)
+    async def get_today_weight(self):
+        return await self.get_other_day_weight(0)
+
+    async def get_other_day_weight(self, shift_days):
+        their_now = await self.p.get_their_now()
+        their_day = their_now + timedelta(days=shift_days)
+        tp = WeightPoint(self.p.ident, their_day)
         await tp.load()
         return tp.weight
 
