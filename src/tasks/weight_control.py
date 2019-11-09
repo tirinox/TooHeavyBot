@@ -15,7 +15,7 @@ class WeightPoint(TimePoint):
             'ts': int(ts)
         }
 
-    def __init__(self, user_id, dt, weight=None, percent=None, ts=None):
+    def __init__(self, user_id, dt=datetime.now(), weight=None, percent=None, ts=None):
         super().__init__(user_id, dt)
         if weight or percent or ts:
             self.set_values(weight, percent, ts)

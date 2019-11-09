@@ -37,7 +37,7 @@ class MessageHandler:
             await self.handle_start(io, code)
         elif text.startswith(RESET_COMMAND):
             io.state = {}
-            await io.message.reply('RESET DONE!')
+            await io.message.reply('Reset done!')
         elif text.startswith(SERVICE_COMMAND) and self.is_admin(io):
             await self.handle_service(io)
         else:
@@ -60,15 +60,19 @@ class MessageHandler:
                                    reply_markup=io.out_keyboard,
                                    disable_notification=True)
 
-    async def handle(self, message: Message):
+    async def load_io(self, message: Message):
         profile = Profile(message.from_user.id)
         dialog_state = await profile.dialog_state()
 
         io_obj = DialogIO(message, profile, message.text, dialog_state)
         io_obj.location = message.location
         io_obj.language = await profile.get_language()
+        return io_obj
 
-        await profile.activity()
+    async def handle(self, message: Message):
+        io_obj = await self.load_io(message)
+
+        await io_obj.profile.activity()
 
         if await self.check_if_command(io_obj):
             return
@@ -102,5 +106,5 @@ class MessageHandler:
         else:
             logging.error(f'handle recursion detected!')
 
-        await profile.set_dialog_state(io_obj.state)
+        await io_obj.profile.set_dialog_state(io_obj.state)
         await self._send_texts(io_obj, all_reply_texts)

@@ -74,6 +74,8 @@ async def notify_one_user(bot: TelegramBot, user_id, now_ts):
         await profile.set_prop(KEY_LAST_SENT_TS, now_ts)
         await bot.send_text(user_id, tr.notification_weight)
 
+        # todo: push state with keyboard
+
 
 async def notify_all_by_time(bot: TelegramBot):
     now = datetime.now(tz=get_localzone())
