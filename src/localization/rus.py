@@ -69,7 +69,7 @@ class LangRussian:
         self.ap_same_weight = 'Ваш вес не изменился со вчера.'
 
         self.ap_drop_weight_total = lambda delta: f'Вы похудели на {delta:0.2f} кг с самого начала.'
-        self.ap_gain_weight_total = lambda delta: f'Вы набрали {delta:0.2f} кг since the start.'
+        self.ap_gain_weight_total = lambda delta: f'Вы набрали {delta:0.2f} кг с самого начала.'
         self.ap_same_weight_total = "Ваш вес не изменился с начала программы."
 
         self.ap_progress = lambda percent: f'\nВаш прогресс:\n<b>{percent:.2f} %</b>'

@@ -32,6 +32,15 @@ class WeightPoint(TimePoint):
     def ts(self):
         return self.get_value_prop('ts')
 
+    async def get_earliest(self) -> 'WeightPoint':
+        keys = await self.all_dates_for_user()
+        if not keys:
+            return None
+        early_date_tuple = min(keys)
+        wp = WeightPoint(self.user_id, datetime(*early_date_tuple))
+        await wp.load()
+        return wp
+
 
 class WeightProfile:
     def __init__(self, p: Profile, weight: float = 0.0):
@@ -102,6 +111,9 @@ class WeightProfile:
         self.tps = await asyncio.gather(*tasks)
 
         return [tp for tp in self.tps if tp.value]
+
+    async def get_initial_weight_point(self):
+        return await WeightPoint(self.p.ident).get_earliest()
 
     def __len__(self):
         return len(self.tps)
