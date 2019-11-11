@@ -19,19 +19,40 @@ async def ask_current_weight(io: DialogIO):
 
         reported = await wp.report_aim_percent()
         if reported:
+
+            # f'\nВаш прогресс:\n<b>{percent:.2f} %</b>'
             io.reply(lang.ap_progress(wp.aim_percent)).nl()
 
             y_weight = await wp.get_yesterday_weight()
-            if y_weight is not None:
+            if y_weight:
                 delta = abs(y_weight - weight)
                 if y_weight > weight:
+                    # f'Вы похудели на {delta:0.2f} кг со вчера.'
                     io.add(lang.ap_drop_weight(delta))
                 elif y_weight < weight:
+                    # f'Вы поправились на {delta:0.2f} кг со вчера.'
                     io.add(lang.ap_gain_weight(delta))
                 else:
+                    # 'Ваш вес не изменился со вчера.'
                     io.add(lang.ap_same_weight)
             else:
+                # "Кажется, вы не вносили вчера вес."
                 io.add(lang.ap_you_forgot)
+
+            start_weight_pt = await wp.get_initial_weight_point()
+            if start_weight_pt is not None:
+                io.nl()
+                start_weight = start_weight_pt.weight
+                delta = abs(start_weight - weight)
+                if start_weight > weight:
+                    # f'Вы похудели на {delta:0.2f} кг с самого начала.'
+                    io.add(lang.ap_drop_weight_total(delta))
+                elif start_weight < weight:
+                    # f'Вы набрали {delta:0.2f} кг с самого начала.'
+                    io.add(lang.ap_gain_weight_total(delta))
+                else:
+                    # "Ваш вес не изменился с начала программы."
+                    io.add(lang.ap_same_weight_total)
 
             # graph
             png = await wp.plot_weight_graph(n_days=GRAPH_DAYS)
