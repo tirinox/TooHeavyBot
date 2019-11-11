@@ -38,3 +38,13 @@ class TimePoint(ModelBase):
             self.value = {}
         self.value[prop] = value
         return self
+
+    async def all_dates_for_user(self):
+        pattern = super().key(self.user_id, '*')
+        keys = await DB().scan(pattern)
+
+        results = []
+        for k in keys:
+            *args, year, month, day = k.split(':')
+            results.append(tuple(map(int, (year, month, day))))
+        return results

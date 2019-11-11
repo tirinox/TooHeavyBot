@@ -4,6 +4,7 @@ from util.date import *
 import asyncio
 from typing import List
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from util import try_parse_float
 
 
@@ -113,7 +114,7 @@ class WeightProfile:
         return [tp for tp in self.tps if tp.value]
 
     async def get_initial_weight_point(self):
-        return await WeightPoint(self.p.ident).get_earliest()
+        return await WeightPoint(self.p.ident, None).get_earliest()
 
     def __len__(self):
         return len(self.tps)
@@ -123,7 +124,8 @@ class WeightProfile:
         if len(tps) < 2:
             return None
 
-        plt.figure()
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
 
         xs, ys = [], []
         for tp in tps:
@@ -132,16 +134,20 @@ class WeightProfile:
                 xs.append(tp.date)
                 ys.append(w)
 
-        plt.xticks(rotation=30)
-        plt.plot(xs, ys, marker='*')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 
-        plt.ylabel(y_label)
+        ax.plot(xs, ys, marker='*')
+
+        for tick in ax.get_xticklabels():
+            tick.set_rotation(30)
+
+        ax.set_ylabel(y_label)
 
         if start_weight:
-            plt.axhline(y=start_weight, color='r', linestyle='--')
+            ax.axhline(y=start_weight, color='r', linestyle='--')
 
         if aim_weight:
-            plt.axhline(y=aim_weight, color='g', linestyle='--')
+            ax.axhline(y=aim_weight, color='g', linestyle='--')
 
         from io import BytesIO
         png_buffer = BytesIO()
