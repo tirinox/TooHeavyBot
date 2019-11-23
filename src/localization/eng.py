@@ -72,6 +72,9 @@ class LangEnglish:
         self.ap_gain_weight_total = lambda delta: f'You have gained {delta:0.2f} KG since the start.'
         self.ap_same_weight_total = "You weight has not changed since the start."
 
+        self.ap_wrong_way = 'Your weight goes the wrong way!'
+        self.ap_days_to_go_l = lambda days: f'You will reach your target weight in {days} days.'
+
         self.ap_you_forgot = "It seems, you didn't enter your weight yesterday."
         self.ap_progress = lambda percent: f'\nYour progress is\n<b>{percent:.2f} %</b>'
         self.ap_prompt_start_weight = 'Please enter your start weight (it is 0 % of aim) KG:'

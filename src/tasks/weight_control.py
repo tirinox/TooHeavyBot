@@ -6,6 +6,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from util import try_parse_float
+import numpy as np
 
 
 class WeightPoint(TimePoint):
@@ -16,8 +17,9 @@ class WeightPoint(TimePoint):
             'ts': int(ts)
         }
 
-    def __init__(self, user_id, dt, weight=None, percent=None, ts=None):
+    def __init__(self, user_id, dt: datetime, weight=None, percent=None):
         super().__init__(user_id, dt)
+        ts = dt.timestamp() if dt is not None else None
         if weight or percent or ts:
             self.set_values(weight, percent, ts)
 
@@ -93,12 +95,13 @@ class WeightProfile:
         await tp.load()
         return tp.weight
 
+    @staticmethod
+    async def _report_weight(ident, date, weight, percent):
+        return await WeightPoint(ident, date, weight, percent).save()
+
     async def report_weight(self):
         their_now = await self.p.get_their_now()
-        tp = WeightPoint(self.p.ident, their_now,
-                         self.weight, self.aim_percent,
-                         their_now.timestamp())
-        await tp.save()
+        await self._report_weight(self.p.ident, their_now, self.weight, self.aim_percent)
 
     async def get_weight_points_for_profile(self, n_days=30) -> List[WeightPoint]:
         today = await self.p.get_their_now()
@@ -114,7 +117,7 @@ class WeightProfile:
         return [tp for tp in self.tps if tp.value]
 
     async def get_initial_weight_point(self):
-        return await WeightPoint(self.p.ident, None).get_earliest()
+        return await WeightPoint(self.p.ident, datetime.now()).get_earliest()
 
     def __len__(self):
         return len(self.tps)
@@ -155,21 +158,44 @@ class WeightProfile:
         png_buffer.seek(0)
         return png_buffer
 
-    async def plot_weight_graph(self, n_days=30):
+    async def plot_weight_graph(self, tps: List[WeightPoint]):
         start_weight = await self.get_weight_start()
         aim_weight = await self.get_weight_aim()
 
         tr = await self.p.get_translator()
         y_label = tr.ap_weight_label
 
-        tps = await self.get_weight_points_for_profile(n_days)
         return await asyncio.get_event_loop().run_in_executor(
             None, self._plot_weight_graph, tps, start_weight, aim_weight, False, y_label)
 
-    async def plot_percent_graph(self, n_days=30):
+    async def plot_percent_graph(self, tps: List[WeightPoint]):
         tr = await self.p.get_translator()
         y_label = tr.ap_percent_label
 
-        tps = await self.get_weight_points_for_profile(n_days)
         return await asyncio.get_event_loop().run_in_executor(
             None, self._plot_weight_graph, tps, 0, 100, True, y_label)
+
+    @classmethod
+    def estimate_weight_curve(cls, tps: List[WeightPoint]):
+        if len(tps) < 5:
+            return None, None
+
+        time_stamps = np.array([tp.ts for tp in tps], dtype=np.uint32)
+        weights = np.array([tp.weight for tp in tps], dtype=np.float)
+
+        a, b = np.polyfit(time_stamps, weights, 1).tolist()
+
+        if abs(a) < 1e-6:
+            return None, None
+
+        return a, b
+
+    async def timestamp_of_target_weight(self, tps: List[WeightPoint]):
+        aim_weight = await self.get_weight_aim()
+
+        a, b = self.estimate_weight_curve(tps)
+        if a is None:
+            return None
+
+        ts = (aim_weight - b) / a
+        return ts

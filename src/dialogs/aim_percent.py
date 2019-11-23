@@ -55,8 +55,25 @@ async def ask_current_weight(io: DialogIO):
                     io.add(lang.ap_same_weight_total)
 
             # graph
-            png = await wp.plot_weight_graph(n_days=GRAPH_DAYS)
-            io.send_image(png, lang.ap_chart_name)
+            points = await wp.get_weight_points_for_profile(GRAPH_DAYS)
+            if len(points) >= 2:
+
+                target_ts = await wp.timestamp_of_target_weight(points)
+                if target_ts is not None:
+                    now = now_tsi()
+
+                    io.nl()
+
+                    if target_ts < now:
+                        # 'Вы движитесь не в том направлении!'
+                        io.add(lang.ap_wrong_way)
+                    else:
+                        days_to_go = int(round((target_ts - now) / DAY))
+                        # (f'Вы достигнете цели через {days_to_go} дн.')
+                        io.add(lang.ap_days_to_go_l(days_to_go))
+
+                png = await wp.plot_weight_graph(points)
+                io.send_image(png, lang.ap_chart_name)
 
         io.back()
 
