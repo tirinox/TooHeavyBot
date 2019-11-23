@@ -3,6 +3,7 @@
 .config.yml
 .local_config.yml
 _db/
+dump.rdb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

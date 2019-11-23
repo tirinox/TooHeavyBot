@@ -72,6 +72,9 @@ class LangRussian:
         self.ap_gain_weight_total = lambda delta: f'Вы набрали {delta:0.2f} кг с самого начала.'
         self.ap_same_weight_total = "Ваш вес не изменился с начала программы."
 
+        self.ap_wrong_way = 'Вы движитесь не в том направлении...'
+        self.ap_days_to_go_l = lambda days: f'Вы достигнете цели через {days} дн.'
+
         self.ap_progress = lambda percent: f'\nВаш прогресс:\n<b>{percent:.2f} %</b>'
         self.ap_you_forgot = "Кажется, вы не вносили вчера вес."
         self.ap_prompt_start_weight = 'Введите ваш начальный вес в кг. Это будет 0 % цели:'
