@@ -185,7 +185,7 @@ class WeightProfile:
 
         a, b = np.polyfit(time_stamps, weights, 1).tolist()
 
-        if abs(a) < 1e-6:
+        if abs(a) < 1e-8:
             return None, None
 
         return a, b
