@@ -1,14 +1,15 @@
-from dataclasses import dataclass, field
-from models.profile import Profile
-from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
 import logging
-from localization import *
+from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Union
 
+from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
+
+from localization import *
+from models.profile import Profile
+
 
 NEW_LINE = '\n'
-
 
 CURRENT_FUNCTION_KEY = '__func_state'
 STATE_STACK_KEY = '__stack'
@@ -40,7 +41,6 @@ def get_message_handlers(my_globals: dict):
 
 @dataclass
 class DialogIO:
-    message: Message
     profile: Profile
     text: str
     state: dict = field(default_factory={})
@@ -55,6 +55,14 @@ class DialogIO:
     _lang: Union[languages] = None
 
     ASKED = '__asked'
+
+    @staticmethod
+    async def load(profile: Profile, text='', location=None):
+        dialog_state = await profile.dialog_state()
+        io_obj = DialogIO(profile, text, dialog_state)
+        io_obj.location = location
+        io_obj.language = await profile.get_language()
+        return io_obj
 
     @property
     def language(self) -> LangEnglish:
@@ -158,6 +166,9 @@ class DialogIO:
         self.state[CURRENT_FUNCTION_KEY] = handler_name
 
         return self
+
+    async def save_dialog_state(self):
+        await self.profile.set_dialog_state(self.state)
 
 
 def normalize_variants(variants: list):

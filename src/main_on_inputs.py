@@ -7,7 +7,7 @@ from chat.msg_io import get_message_handlers
 from chat.message_handler import MessageHandler
 import asyncio
 from aiogram.types import Message, Location, base, InlineKeyboardMarkup, ForceReply
-from tasks import task_manager
+from tasks.task_manager import TaskManager
 from tasks.notify_weight import *
 from tasks.delete_profile import delete_profile
 import threading
@@ -123,7 +123,10 @@ async def repl_loop(message_handler: MessageHandler):
     print('Buy!')
 
 
-class FakeBot:
+class FakeBot(TelegramBot):
+    def __init__(self):
+        ...
+
     async def send_text(self, user_id, message):
         return print(f'send to {user_id}: {message}')
 
@@ -143,7 +146,8 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(DB().connect())
 
-    task_manager.run_on_loop(loop, FakeBot())
+    task_manager = TaskManager(FakeBot())
+    task_manager.run_on_loop(loop)
 
     handlers = get_message_handlers(globals())
     message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)

@@ -1,7 +1,7 @@
 from chat.msg_io import *
 from util.config import Config
-from tasks.notify_weight import fix_bad_notifications
-
+import tasks.notify_weight
+from aiogram.types import Message
 
 START_COMMAND = '/start'
 RESET_COMMAND = '/reset'
@@ -20,31 +20,31 @@ class MessageHandler:
 
         self.admins = list(map(str, Config().get('admin.list', [])))
 
-    def is_admin(self, io: DialogIO):
-        return str(io.message.from_user.id) in self.admins
+    def is_admin(self, message: Message):
+        return str(message.from_user.id) in self.admins
 
-    async def handle_start(self, io: DialogIO, code: str):
+    async def _handle_start(self, io: DialogIO, code: str):
         ...
 
-    async def handle_service(self, io: DialogIO):
-        await fix_bad_notifications()
-        await io.message.reply('Service done!')
+    async def _handle_service(self, message: Message):
+        await tasks.notify_weight.WeightNotifier.fix_bad_notifications()
+        await message.reply('Service done!')
 
-    async def check_if_command(self, io: DialogIO):
-        text = str(io.text)
+    async def _check_if_command(self, message: Message, io: DialogIO):
+        text = str(message.text)
         if text.startswith(START_COMMAND):
             code = text[len(START_COMMAND):].strip()
-            await self.handle_start(io, code)
+            await self._handle_start(io, code)
         elif text.startswith(RESET_COMMAND):
             io.state = {}
-            await io.message.reply('Reset done!')
-        elif text.startswith(SERVICE_COMMAND) and self.is_admin(io):
-            await self.handle_service(io)
+            await message.reply('Reset done!')
+        elif text.startswith(SERVICE_COMMAND) and self.is_admin(message):
+            await self._handle_service(message)
         else:
             return False
         return True
 
-    def find_handler(self, state: dict):
+    def _find_handler(self, state: dict):
         handler_name = state.get(CURRENT_FUNCTION_KEY, None)
 
         if not handler_name or handler_name not in self.handlers:
@@ -52,34 +52,18 @@ class MessageHandler:
             return self.initial_handler
         return self.handlers[handler_name]
 
-    async def _send_texts(self, io: DialogIO, texts: list):
+    async def _send_texts(self, io: DialogIO, original_message: Message, texts: list):
         if texts:
             text_sum = NEW_LINE.join(texts)
-            await io.message.reply(text_sum,
-                                   reply=False,
-                                   reply_markup=io.out_keyboard,
-                                   disable_notification=True)
+            await original_message.reply(text_sum,
+                                         reply=False,
+                                         reply_markup=io.out_keyboard,
+                                         disable_notification=True)
 
-    async def load_io(self, message: Message):
-        profile = Profile(message.from_user.id)
-        dialog_state = await profile.dialog_state()
-
-        io_obj = DialogIO(message, profile, message.text, dialog_state)
-        io_obj.location = message.location
-        io_obj.language = await profile.get_language()
-        return io_obj
-
-    async def handle(self, message: Message):
-        io_obj = await self.load_io(message)
-
-        await io_obj.profile.activity()
-
-        if await self.check_if_command(io_obj):
-            return
-
+    async def handle_io(self, io_obj: DialogIO, input_message: Message):
         all_reply_texts = []
 
-        handler = self.find_handler(io_obj.state)
+        handler = self._find_handler(io_obj.state)
 
         jump_no = 0
         while jump_no < self.MAX_JUMPS:
@@ -89,9 +73,9 @@ class MessageHandler:
                 all_reply_texts.append(io_obj.out_text)
 
             if io_obj.out_image or io_obj.new_message:
-                await self._send_texts(io_obj, all_reply_texts)
+                await self._send_texts(io_obj, input_message, all_reply_texts)
                 if io_obj.out_image:
-                    await message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)
+                    await input_message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)
                     io_obj.out_image = None
                     io_obj.out_image_caption = None
                 all_reply_texts = []
@@ -100,11 +84,23 @@ class MessageHandler:
             if io_obj.asked:
                 break
 
-            handler = self.find_handler(io_obj.state)
+            handler = self._find_handler(io_obj.state)
 
             jump_no += 1
         else:
             logging.error(f'handle recursion detected!')
 
-        await io_obj.profile.set_dialog_state(io_obj.state)
-        await self._send_texts(io_obj, all_reply_texts)
+        await io_obj.save_dialog_state()
+        await self._send_texts(io_obj, input_message, all_reply_texts)
+
+    async def handle(self, input_message: Message):
+        profile = Profile(input_message.from_user.id)
+        io_obj = await DialogIO.load(profile, input_message.text, input_message.location)
+        io_obj.message = input_message
+
+        await io_obj.profile.activity()
+
+        if await self._check_if_command(input_message, io_obj):
+            return
+
+        await self.handle_io(io_obj, input_message)

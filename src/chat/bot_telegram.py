@@ -1,5 +1,7 @@
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ContentTypes
+
+from chat.message_handler import MessageHandler
 from util.config import Config
 
 
@@ -8,7 +10,9 @@ class TelegramBot:
     def is_personal_chat(m: types.Message):
         return m.from_user.id == m.chat.id
 
-    def __init__(self, handler_func):
+    def __init__(self, handler: MessageHandler):
+        self.handler = handler
+
         token = Config().get('telegram.token')
         self.bot = Bot(token, parse_mode=types.ParseMode.HTML)
         self.dispatcher = Dispatcher(self.bot)
@@ -19,7 +23,7 @@ class TelegramBot:
             if not TelegramBot.is_personal_chat(message):
                 return
 
-            await handler_func(message)
+            await self.handler.handle(message)
 
     def serve(self):
         executor.start_polling(self.dispatcher, skip_updates=True)

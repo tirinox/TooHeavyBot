@@ -63,8 +63,6 @@ async def test_body():
         plt.plot(date_fit, weights_fit, 'r')
 
         plt.show()
-
-
     else:
         print('unkown!')
 

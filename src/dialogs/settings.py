@@ -1,10 +1,8 @@
-from chat.msg_io import *
-from util.date import *
-import pytz
-from tasks.notify_weight import activate_notification, deactivate_notification
-from tasks.change_timezone import change_timezone
 from timezonefinder import TimezoneFinder
+
 from dialogs.best_weight import *
+from tasks.change_timezone import change_timezone
+from util.date import *
 
 tz_finder = TimezoneFinder(in_memory=True)
 

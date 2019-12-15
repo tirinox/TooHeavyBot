@@ -1,23 +1,28 @@
 import asyncio
-from util.config import Config
 import logging
+
 import tasks.notify_weight
 import tasks.weight_control
+from chat.bot_telegram import TelegramBot
+from util.config import Config
 
 
-def periodic_task_seconds():
-    return Config().get_inteval_seconds('periodic.period', min_interval='1s', max_interval='1d')
+class TaskManager:
+    @staticmethod
+    def periodic_task_seconds():
+        return Config().get_inteval_seconds('periodic.period', min_interval='1s', max_interval='1d')
 
+    def __init__(self, bot: TelegramBot):
+        self.bot = bot
 
-async def main_periodic_task(bot):
-    period = periodic_task_seconds()
-    while True:
-        await asyncio.sleep(period)
+    async def _main_periodic_task(self):
+        period = self.periodic_task_seconds()
+        while True:
+            await asyncio.sleep(period)
 
-        logging.info('Periodic tick!')
+            logging.info('Periodic tick!')
 
-        await tasks.notify_weight.notify_all_by_time(bot)
+            await tasks.notify_weight.WeightNotifier(self.bot).notify_all_by_time()
 
-
-def run_on_loop(loop: asyncio.AbstractEventLoop, bot):
-    loop.create_task(main_periodic_task(bot))
+    def run_on_loop(self, loop: asyncio.AbstractEventLoop):
+        loop.create_task(self._main_periodic_task())

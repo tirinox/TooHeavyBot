@@ -1,121 +1,126 @@
+import asyncio
+import logging
+
+from chat.bot_telegram import TelegramBot
+from chat.msg_io import DialogIO
+from dialogs.aim_percent import ask_current_weight
 from models.profile import Profile
 from models.time_tracker import TimeTracker
-from util.date import *
-from util.database import DB
-import logging
-from tzlocal import get_localzone
-from datetime import datetime
-from chat.bot_telegram import TelegramBot
 from tasks.weight_control import WeightProfile
-import asyncio
+from util.database import DB
+from util.date import *
 
 
-KEY_NOTIFICATION_TIME = 'notification_time'
-KEY_WEIGHT_TRACKER = 'weight_tracker'
-KEY_LAST_SENT_TS = 'last_sent_ts'
+class WeightNotifier:
+    KEY_NOTIFICATION_TIME = 'notification_time'
+    KEY_WEIGHT_TRACKER = 'weight_tracker'
+    KEY_LAST_SENT_TS = 'last_sent_ts'
 
-NOTIFICATION_COOLDOWN = parse_timespan_to_seconds('1m')
+    NOTIFICATION_COOLDOWN = parse_timespan_to_seconds('1m')
 
+    def __init__(self, bot: TelegramBot):
+        self.bot = bot
 
-async def activate_notification(profile: Profile, hh, mm):
-    await deactivate_notification(profile)
+    @classmethod
+    async def activate_notification(cls, profile: Profile, hh, mm):
+        await cls.deactivate_notification(profile)
 
-    await profile.set_prop(KEY_NOTIFICATION_TIME, f'{hh}:{mm}')
+        await profile.set_prop(cls.KEY_NOTIFICATION_TIME, f'{hh}:{mm}')
 
-    tz = await profile.get_time_zone()
-    if tz is None:
-        logging.error(f'time zone is not set for user {profile.ident}!')
-        return
-
-    local_hh, local_mm = convert_time_hh_mm_to_local(hh, mm, tz)
-
-    tr = TimeTracker(KEY_WEIGHT_TRACKER, local_hh, local_mm)
-    await tr.register_user(profile.ident)
-
-    return delta_to_next_hh_mm(local_hh, local_mm)
-
-
-async def deactivate_notification(profile: Profile):
-    tz = await profile.get_time_zone()
-    if tz is None:
-        logging.error(f'time zone is not set for user {profile.ident}!')
-        return
-
-    current_time_str = await profile.get_prop(KEY_NOTIFICATION_TIME)
-
-    try:
-        hh, mm = hour_and_min_from_str(current_time_str)
-
-        await profile.del_prop(KEY_NOTIFICATION_TIME)
+        tz = await profile.get_time_zone()
+        if tz is None:
+            logging.error(f'time zone is not set for user {profile.ident}!')
+            return
 
         local_hh, local_mm = convert_time_hh_mm_to_local(hh, mm, tz)
 
-        tr = TimeTracker(KEY_WEIGHT_TRACKER, local_hh, local_mm)
-        await tr.unregister_user(profile.ident)
-    except (TypeError, ValueError, AttributeError):
-        ...
+        tr = TimeTracker(cls.KEY_WEIGHT_TRACKER, local_hh, local_mm)
+        await tr.register_user(profile.ident)
 
+        return delta_to_next_hh_mm(local_hh, local_mm)
 
-async def notify_one_user(bot: TelegramBot, user_id, now_ts):
-    profile = Profile(user_id)
-    wp = WeightProfile(profile)
+    @classmethod
+    async def deactivate_notification(cls, profile: Profile):
+        tz = await profile.get_time_zone()
+        if tz is None:
+            logging.error(f'time zone is not set for user {profile.ident}!')
+            return
 
-    today_weight = await wp.get_today_weight()
-    if today_weight is not None:
-        # he has entered weight for today -> skip
-        return
+        current_time_str = await profile.get_prop(cls.KEY_NOTIFICATION_TIME)
 
-    last_ts = await profile.get_prop(KEY_LAST_SENT_TS)
-    last_ts = 0 if last_ts is None else int(last_ts)
+        try:
+            hh, mm = hour_and_min_from_str(current_time_str)
 
-    if now_ts > last_ts + NOTIFICATION_COOLDOWN:
-        tr = await profile.get_translator()
+            await profile.del_prop(cls.KEY_NOTIFICATION_TIME)
 
-        await profile.set_prop(KEY_LAST_SENT_TS, now_ts)
-        await bot.send_text(user_id, tr.notification_weight)
+            local_hh, local_mm = convert_time_hh_mm_to_local(hh, mm, tz)
 
-        # todo: push state with keyboard
+            tr = TimeTracker(cls.KEY_WEIGHT_TRACKER, local_hh, local_mm)
+            await tr.unregister_user(profile.ident)
+        except (TypeError, ValueError, AttributeError):
+            ...
 
+    async def notify_one_user(self, user_id, now_ts):
+        profile = Profile(user_id)
+        wp = WeightProfile(profile)
 
-async def notify_all_by_time(bot: TelegramBot):
-    now = datetime.now(tz=get_localzone())
-    now_ts = int(now.timestamp())
+        today_weight = await wp.get_today_weight()
+        if today_weight is not None:
+            # he has entered weight for today -> skip
+            return
 
-    tr = TimeTracker(KEY_WEIGHT_TRACKER, now.hour, now.minute)
+        last_ts = await profile.get_prop(self.KEY_LAST_SENT_TS)
+        last_ts = 0 if last_ts is None else int(last_ts)
 
-    user_ids = await tr.list()
-    await asyncio.gather(*(notify_one_user(bot, user_id, now_ts) for user_id in user_ids))
+        if now_ts > last_ts + self.NOTIFICATION_COOLDOWN:
+            tr = await profile.get_translator()
 
+            await profile.set_prop(self.KEY_LAST_SENT_TS, now_ts)
+            message = await self.bot.send_text(user_id, tr.notification_weight)
 
-async def fix_bad_notifications():
-    db = DB()
+            io = await DialogIO.load(profile, '')
+            io.push(ask_current_weight)
+            await self.bot.handler.handle_io(io, message)
 
-    time_prefix = TimeTracker('', 0, 0).key(KEY_WEIGHT_TRACKER)
-    time_keys = await db.scan(time_prefix + '*')
+    async def notify_all_by_time(self):
+        now = datetime.now(tz=get_localzone())
+        now_ts = int(now.timestamp())
 
-    for time_key in time_keys:
-        hh, mm = tuple(map(int, time_key.split(':')[2:4]))
-        all_users_for_this_time = (await db.redis.smembers(time_key)) or []
-        for user_id in all_users_for_this_time:
-            profile = Profile(user_id)
+        tr = TimeTracker(self.KEY_WEIGHT_TRACKER, now.hour, now.minute)
 
-            should_delete = False
+        user_ids = await tr.list()
+        await asyncio.gather(*(self.notify_one_user(user_id, now_ts) for user_id in user_ids))
 
-            tz = await profile.get_time_zone()
-            if tz is None:
-                logging.warning(f'time zone is not set for user {profile.ident}!')
-                should_delete = True
-            else:
-                try:
-                    their_hh, their_mm = hour_and_min_from_str(await profile.get_prop(KEY_NOTIFICATION_TIME))
-                except (TypeError, ValueError, AttributeError):
+    @classmethod
+    async def fix_bad_notifications(cls):
+        db = DB()
+
+        time_prefix = TimeTracker('', 0, 0).key(cls.KEY_WEIGHT_TRACKER)
+        time_keys = await db.scan(time_prefix + '*')
+
+        for time_key in time_keys:
+            hh, mm = tuple(map(int, time_key.split(':')[2:4]))
+            all_users_for_this_time = (await db.redis.smembers(time_key)) or []
+            for user_id in all_users_for_this_time:
+                profile = Profile(user_id)
+
+                should_delete = False
+
+                tz = await profile.get_time_zone()
+                if tz is None:
+                    logging.warning(f'time zone is not set for user {profile.ident}!')
                     should_delete = True
                 else:
-                    local_hh, local_mm = convert_time_hh_mm_to_local(their_hh, their_mm, tz)
-                    if local_hh != hh or local_mm != mm:
+                    try:
+                        their_hh, their_mm = hour_and_min_from_str(await profile.get_prop(cls.KEY_NOTIFICATION_TIME))
+                    except (TypeError, ValueError, AttributeError):
                         should_delete = True
+                    else:
+                        local_hh, local_mm = convert_time_hh_mm_to_local(their_hh, their_mm, tz)
+                        if local_hh != hh or local_mm != mm:
+                            should_delete = True
 
-            if should_delete:
-                logging.info(f'detected bad notification record: {hh}:{mm} for user {profile.ident}')
-                tt = TimeTracker(KEY_WEIGHT_TRACKER, hh, mm)
-                await tt.unregister_user(profile.ident)
+                if should_delete:
+                    logging.info(f'detected bad notification record: {hh}:{mm} for user {profile.ident}')
+                    tt = TimeTracker(cls.KEY_WEIGHT_TRACKER, hh, mm)
+                    await tt.unregister_user(profile.ident)
