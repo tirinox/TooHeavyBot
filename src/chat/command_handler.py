@@ -8,7 +8,7 @@ RESET_COMMAND = '/reset'
 SERVICE_COMMAND = '/service'
 
 
-class CommandHandler:
+class CommandHandler(AbstractCommandHandler):
     def __init__(self):
         self.admins = list(map(str, Config().get('admin.list', [])))
 

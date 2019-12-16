@@ -1,20 +1,23 @@
+import logging
+
 from aiogram.types import Message
 
-from chat.msg_io import *
+from chat.msg_io import AbstractMessageSender, AbstractCommandHandler, fname, DialogIO, CURRENT_FUNCTION_KEY, NEW_LINE
+from models.profile import Profile
 
 
 class MessageHandler:
     MAX_JUMPS = 50
 
-    def __init__(self, handlers: dict, initial_handler,
-                 command_handler: callable):
-        assert handlers
+    def __init__(self,
+                 handlers: dict,
+                 initial_handler,
+                 command_handler: AbstractCommandHandler,
+                 sender: AbstractMessageSender):
         self.handlers = handlers
-
-        assert initial_handler
         self.initial_handler = initial_handler
-
         self.command_handler = command_handler
+        self.sender = sender
 
     def _find_handler(self, state: dict):
         handler_name = state.get(CURRENT_FUNCTION_KEY, None)
@@ -24,16 +27,20 @@ class MessageHandler:
             return self.initial_handler
         return self.handlers[handler_name]
 
-    async def _send_texts(self, io: DialogIO, original_message: Message, texts: list):
+    async def _send_texts(self, io: DialogIO, texts: list):
         if texts:
             text_sum = NEW_LINE.join(texts)
-            await original_message.reply(text_sum,
-                                         reply=False,
-                                         reply_markup=io.out_keyboard,
-                                         disable_notification=True)
+            await self.sender.send_text(io.profile.ident,
+                                        text_sum,
+                                        io.out_keyboard,
+                                        disable_notification=True)
 
-    async def handle_io(self, io_obj: DialogIO, input_message: Message):
+    async def revolve_io(self, io_obj: DialogIO):
         all_reply_texts = []
+
+        # it may be notification text
+        if io_obj.out_text:
+            all_reply_texts.append(io_obj.out_text)
 
         handler = self._find_handler(io_obj.state)
 
@@ -45,9 +52,9 @@ class MessageHandler:
                 all_reply_texts.append(io_obj.out_text)
 
             if io_obj.out_image or io_obj.new_message:
-                await self._send_texts(io_obj, input_message, all_reply_texts)
+                await self._send_texts(io_obj, all_reply_texts)
                 if io_obj.out_image:
-                    await input_message.answer_photo(photo=io_obj.out_image, caption=io_obj.out_image_caption)
+                    await self.sender.send_photo(io_obj.profile.ident, io_obj.out_image, io_obj.out_image_caption)
                     io_obj.out_image = None
                     io_obj.out_image_caption = None
                 all_reply_texts = []
@@ -63,7 +70,7 @@ class MessageHandler:
             logging.error(f'handle recursion detected!')
 
         await io_obj.save_dialog_state()
-        await self._send_texts(io_obj, input_message, all_reply_texts)
+        await self._send_texts(io_obj, all_reply_texts)
 
     async def handle(self, input_message: Message):
         profile = Profile(input_message.from_user.id)
@@ -75,4 +82,4 @@ class MessageHandler:
         if await self.command_handler(input_message, io_obj):
             return
 
-        await self.handle_io(io_obj, input_message)
+        await self.revolve_io(io_obj)

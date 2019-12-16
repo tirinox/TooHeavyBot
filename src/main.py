@@ -18,10 +18,12 @@ if __name__ == '__main__':
 
     message_handler = MessageHandler(handlers,
                                      initial_handler=ENTRY_POINT,
-                                     command_handler=CommandHandler())
+                                     command_handler=CommandHandler(),
+                                     sender=None)
     bot = TelegramBot(message_handler)
+    message_handler.sender = bot
 
-    task_manager = TaskManager(bot)
+    task_manager = TaskManager(message_handler)
     task_manager.run_on_loop(loop)
 
     bot.serve()

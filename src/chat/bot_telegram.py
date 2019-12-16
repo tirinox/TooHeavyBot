@@ -2,15 +2,17 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ContentTypes
 
 from chat.message_handler import MessageHandler
+from chat.msg_io import AbstractMessageSender
 from util.config import Config
 
 
-class TelegramBot:
+class TelegramBot(AbstractMessageSender):
     @staticmethod
     def is_personal_chat(m: types.Message):
         return m.from_user.id == m.chat.id
 
     def __init__(self, handler: MessageHandler):
+        super().__init__()
         self.handler = handler
 
         token = Config().get('telegram.token')
@@ -28,5 +30,11 @@ class TelegramBot:
     def serve(self):
         executor.start_polling(self.dispatcher, skip_updates=True)
 
-    async def send_text(self, user_id, message):
-        return await self.bot.send_message(user_id, message)
+    async def send_photo(self, to_uid, photo, caption=None, disable_notification=False):
+        return await self.bot.send_photo(to_uid, photo, caption,
+                                         disable_notification=disable_notification)
+
+    async def send_text(self, to_uid, text, reply_markup=None, disable_notification=False):
+        return await self.bot.send_message(to_uid, text,
+                                           disable_notification=disable_notification,
+                                           reply_markup=reply_markup)

@@ -3,6 +3,7 @@ from timezonefinder import TimezoneFinder
 from dialogs.best_weight import *
 from tasks.change_timezone import change_timezone
 from util.date import *
+from tasks.notify_weight import WeightNotifier
 
 tz_finder = TimezoneFinder(in_memory=True)
 
@@ -45,14 +46,14 @@ async def ask_notification_time(io: DialogIO):
                keyboard=[[lang.s_not_dont], [lang.back]])
     else:
         if io.text == lang.s_not_dont:
-            await deactivate_notification(io.profile)
+            await WeightNotifier.deactivate_notification(io.profile)
             io.back(lang.s_not_off)
         elif io.text == lang.back:
             io.back()
         else:
             try:
                 hh, mm = hour_and_min_from_str(io.text)
-                delta = await activate_notification(io.profile, hh, mm)
+                delta = await WeightNotifier.activate_notification(io.profile, hh, mm)
                 d_hh, d_mm = hh_mm_from_timedelta(delta)
                 io.back(lang.s_not_on(d_hh, d_mm))
             except (AssertionError, ValueError):

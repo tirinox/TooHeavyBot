@@ -2,8 +2,9 @@ import logging
 from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Union
+from abc import ABC, abstractmethod
 
-from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location
+from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location, Message
 
 from localization import *
 from models.profile import Profile
@@ -91,7 +92,7 @@ class DialogIO:
         return self
 
     def add(self, text: str):
-        self.out_text += text
+        self.out_text = text if self.out_text is None else self.out_text + text
         return self
 
     def nl(self):
@@ -245,3 +246,22 @@ def ask_for_number(io: DialogIO,
             io.ask(error_msg or io.language.invalid_number)
     else:
         io.ask(prompt, keyboard=[io.language.cancel] if with_cancel else None)
+
+
+class AbstractMessageSender(ABC):
+    def __init__(self):
+        ...
+
+    @abstractmethod
+    async def send_photo(self, to_uid, photo, caption=None, disable_notification=False):
+        ...
+
+    @abstractmethod
+    async def send_text(self, to_uid, text, reply_markup=None, disable_notification=False):
+        ...
+
+
+class AbstractCommandHandler(ABC):
+    @abstractmethod
+    async def __call__(self, message: Message, io: DialogIO):
+        ...

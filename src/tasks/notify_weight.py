@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from chat.message_handler import MessageHandler  # fixme: circular
+from chat.message_handler import MessageHandler
 from chat.msg_io import DialogIO
 from dialogs.aim_percent import ask_current_weight
 from models.profile import Profile
@@ -20,7 +20,6 @@ class WeightNotifier:
 
     def __init__(self, handler: MessageHandler):
         self.handler = handler
-        # todo: register self.fix_bad_notifications as callback to handler
 
     @classmethod
     async def activate_notification(cls, profile: Profile, hh, mm):
@@ -78,10 +77,10 @@ class WeightNotifier:
 
             await profile.set_prop(self.KEY_LAST_SENT_TS, now_ts)
 
-            # fixme: тут нужны функция, чтобы отправить уведомление и перевести диалог в нужное состояние и прокрутить его
             io = await DialogIO.load(profile, '')
+            # "'Пора бы внести вес, еще не внесли еще сегодня!'"
             io.add(tr.notification_weight).push(ask_current_weight)
-            await self.handler.handle_io(io)
+            await self.handler.revolve_io(io)
 
     async def notify_all_by_time(self):
         now = datetime.now(tz=get_localzone())
