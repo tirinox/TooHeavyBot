@@ -22,7 +22,7 @@ class TaskManager:
 
             logging.info('Periodic tick!')
 
-            await tasks.notify_weight.WeightNotifier(self.bot).notify_all_by_time()
+            await tasks.notify_weight.WeightNotifier(self.bot.handler).notify_all_by_time()
 
     def run_on_loop(self, loop: asyncio.AbstractEventLoop):
         loop.create_task(self._main_periodic_task())

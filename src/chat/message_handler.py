@@ -1,48 +1,20 @@
-from chat.msg_io import *
-from util.config import Config
-import tasks.notify_weight
 from aiogram.types import Message
 
-START_COMMAND = '/start'
-RESET_COMMAND = '/reset'
-SERVICE_COMMAND = '/service'
+from chat.msg_io import *
 
 
 class MessageHandler:
     MAX_JUMPS = 50
 
-    def __init__(self, handlers: dict, initial_handler):
+    def __init__(self, handlers: dict, initial_handler,
+                 command_handler: callable):
         assert handlers
         self.handlers = handlers
 
         assert initial_handler
         self.initial_handler = initial_handler
 
-        self.admins = list(map(str, Config().get('admin.list', [])))
-
-    def is_admin(self, message: Message):
-        return str(message.from_user.id) in self.admins
-
-    async def _handle_start(self, io: DialogIO, code: str):
-        ...
-
-    async def _handle_service(self, message: Message):
-        await tasks.notify_weight.WeightNotifier.fix_bad_notifications()
-        await message.reply('Service done!')
-
-    async def _check_if_command(self, message: Message, io: DialogIO):
-        text = str(message.text)
-        if text.startswith(START_COMMAND):
-            code = text[len(START_COMMAND):].strip()
-            await self._handle_start(io, code)
-        elif text.startswith(RESET_COMMAND):
-            io.state = {}
-            await message.reply('Reset done!')
-        elif text.startswith(SERVICE_COMMAND) and self.is_admin(message):
-            await self._handle_service(message)
-        else:
-            return False
-        return True
+        self.command_handler = command_handler
 
     def _find_handler(self, state: dict):
         handler_name = state.get(CURRENT_FUNCTION_KEY, None)
@@ -100,7 +72,7 @@ class MessageHandler:
 
         await io_obj.profile.activity()
 
-        if await self._check_if_command(input_message, io_obj):
+        if await self.command_handler(input_message, io_obj):
             return
 
         await self.handle_io(io_obj, input_message)

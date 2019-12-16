@@ -1,18 +1,17 @@
-import typing
-from util.config import Config
-from util.database import DB, print_database
-from unittest.mock import MagicMock
-from dialogs import *
-from chat.msg_io import get_message_handlers
-from chat.message_handler import MessageHandler
-import asyncio
-from aiogram.types import Message, Location, base, InlineKeyboardMarkup, ForceReply
-from tasks.task_manager import TaskManager
-from tasks.notify_weight import *
-from tasks.delete_profile import delete_profile
 import threading
+import typing
+from unittest.mock import MagicMock
 
-USER_ID = 102
+from aiogram.types import Message, base, InlineKeyboardMarkup, ForceReply
+
+from chat.message_handler import MessageHandler
+from dialogs import *
+from tasks.delete_profile import delete_profile
+from tasks.notify_weight import *
+from tasks.task_manager import TaskManager
+from util.config import Config
+from util.database import print_database
+from chat.command_handler import CommandHandler
 
 last_keyboard_anwer_map = {}
 
@@ -68,9 +67,9 @@ async def async_input(prompt):
     return await fut
 
 
-async def dispatch_message_to_handler(message: FakeMessage):
+async def dispatch_message_to_handler(message_handler: MessageHandler, message: FakeMessage, local_uid):
     from_user = MagicMock()
-    from_user.id = USER_ID
+    from_user.id = local_uid
     message.from_user = from_user
 
     await message_handler.handle(message)
@@ -80,24 +79,24 @@ async def my_db(user_id):
     await print_database(f'Profile:{user_id}:*')
 
 
-async def process_text_message(text_message):
+async def process_text_message(message_handler: MessageHandler, text_message, local_uid):
     if text_message in ['/quit', '/exit']:
         return False
     elif text_message == '/reset':
-        await Profile(USER_ID).set_dialog_state(None)
+        await Profile(local_uid).set_dialog_state(None)
     elif text_message.startswith('/dbs'):
         await print_database(text_message[4:].strip())
     elif text_message.startswith('/kill'):
         user_id = int(text_message[5:].strip())
         await delete_profile(user_id)
     elif text_message == '/me':
-        await my_db(USER_ID)
+        await my_db(local_uid)
     elif text_message.startswith('/loc'):
         _, lat, lon = filter(bool, text_message.split(' '))
         message = FakeMessage()
         message.location = Location(latitude=float(lat),
                                     longitude=float(lon))
-        await dispatch_message_to_handler(message)
+        await dispatch_message_to_handler(message_handler, message, local_uid)
     else:
         # translate number to actual item text
         if text_message in last_keyboard_anwer_map:
@@ -105,19 +104,19 @@ async def process_text_message(text_message):
             print(f'({text_message})')
 
         message = FakeMessage(text=text_message)
-        await dispatch_message_to_handler(message)
+        await dispatch_message_to_handler(message_handler, message, local_uid)
     return True
 
 
-async def repl_loop(message_handler: MessageHandler):
+async def repl_loop(message_handler: MessageHandler, local_uid):
     global last_keyboard_anwer_map
 
     await testus()
 
-    await process_text_message('-----BOOTSTRAP----')
+    await process_text_message(message_handler, '-----BOOTSTRAP----', local_uid)
     while True:
         text_message = (await async_input('>')).strip()
-        if not await process_text_message(text_message):
+        if not await process_text_message(message_handler, text_message, local_uid):
             break
 
     print('Buy!')
@@ -131,7 +130,7 @@ class FakeBot(TelegramBot):
         return print(f'send to {user_id}: {message}')
 
 
-if __name__ == '__main__':
+def main():
     print('This is a local test suite based in inputs. Works without telegram connection')
     print('  Type /exit or /quit to exit.')
     print('  Type /dbs [key_pattern] to view redis database.')
@@ -139,6 +138,12 @@ if __name__ == '__main__':
     print('  Type /reset to reset the dialog state.')
     print('  Type /loc <latitude> <longitude> to send location.')
     print('\n')
+
+    user_id = input('User ID? (Press enter for default):').strip()
+    if not user_id:
+        user_id = 102
+    else:
+        user_id = int(user_id)
 
     config = Config()
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)
@@ -150,6 +155,12 @@ if __name__ == '__main__':
     task_manager.run_on_loop(loop)
 
     handlers = get_message_handlers(globals())
-    message_handler = MessageHandler(handlers, initial_handler=ENTRY_POINT)
+    message_handler = MessageHandler(handlers,
+                                     initial_handler=ENTRY_POINT,
+                                     command_handler=CommandHandler())
 
-    loop.run_until_complete(repl_loop(message_handler))
+    loop.run_until_complete(repl_loop(message_handler, user_id))
+
+
+if __name__ == '__main__':
+    main()
