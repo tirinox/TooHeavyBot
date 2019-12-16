@@ -4,14 +4,15 @@ from unittest.mock import MagicMock
 
 from aiogram.types import Message, base, InlineKeyboardMarkup, ForceReply
 
-from chat.message_handler import MessageHandler
-from dialogs import *
+from chat.bot_telegram import TelegramBot
+from chat.command_handler import CommandHandler
+from dialogs.all import *
 from tasks.delete_profile import delete_profile
 from tasks.notify_weight import *
 from tasks.task_manager import TaskManager
 from util.config import Config
 from util.database import print_database
-from chat.command_handler import CommandHandler
+
 
 last_keyboard_anwer_map = {}
 
@@ -144,6 +145,8 @@ def main():
         user_id = 102
     else:
         user_id = int(user_id)
+
+    print(f'Your user ID is {user_id}!')
 
     config = Config()
     logging.basicConfig(level=logging.INFO if config.is_debug else logging.ERROR)

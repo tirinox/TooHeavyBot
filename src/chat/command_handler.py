@@ -27,7 +27,7 @@ class CommandHandler:
         await io.save_dialog_state()
         await message.reply('Reset done!')
 
-    async def check_if_command(self, message: Message, io: DialogIO):
+    async def __call__(self, message: Message, io: DialogIO):
         text = str(message.text)
         if text.startswith(START_COMMAND):
             code = text[len(START_COMMAND):].strip()
