@@ -13,6 +13,7 @@ class LangEnglish:
         self.hello = "Hi! I'm a trainer robot. I will help you to drop or gain body weight."
 
         self.mm_aim_percent = 'Weight progress'
+        self.mm_my_group = 'My group'
         self.mm_settings = 'Settings'
 
         # settings
@@ -95,3 +96,7 @@ class LangEnglish:
         self.bw_prompt_sex = "What is your sex?"
         self.bw_male = 'Male'
         self.bw_female = 'Female'
+
+        # my group menu
+
+        self.myg_title = 'My group settings.'

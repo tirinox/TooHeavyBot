@@ -13,6 +13,7 @@ class LangRussian:
         self.hello = 'Привет! Я робот-тренер и помогу тебе достичь идеального веса (похудеть или набрать массу)!'
 
         self.mm_aim_percent = 'Процент цели?'
+        self.mm_my_group = 'Моя группа'
         self.mm_settings = 'Настройки'
 
         # settings
@@ -95,3 +96,7 @@ class LangRussian:
         self.bw_prompt_sex = "Какой ваш пол?"
         self.bw_male = 'Мужской'
         self.bw_female = 'Женский'
+
+        # my group menu
+
+        self.myg_title = 'Настройка моей группы.'

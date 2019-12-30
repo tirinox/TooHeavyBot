@@ -1,9 +1,10 @@
-from util.database import ModelBase, DB
-from util.date import now_tsi, now_local_dt
-import json
-import pytz
 from datetime import datetime
+
+import pytz
+
 from localization import get_localization
+from util.database import ModelBase
+from util.date import now_tsi, now_local_dt
 
 
 class Profile(ModelBase):
@@ -12,8 +13,6 @@ class Profile(ModelBase):
     TIME_ZONE_KEY = 'tz_name'
     LAST_ACTIVITY_KEY = 'last_activity'
     LANGUAGE_KEY = 'lang'
-
-    # ----
 
     async def get_language(self):
         return await self.get_prop(self.LANGUAGE_KEY)
