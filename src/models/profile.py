@@ -13,6 +13,13 @@ class Profile(ModelBase):
     TIME_ZONE_KEY = 'tz_name'
     LAST_ACTIVITY_KEY = 'last_activity'
     LANGUAGE_KEY = 'lang'
+    USERNAME_KEY = 'username'
+
+    async def get_username(self):
+        return await self.get_prop(self.USERNAME_KEY)
+
+    async def set_username(self, username):
+        await self.set_prop(self.USERNAME_KEY, username)
 
     async def get_language(self):
         return await self.get_prop(self.LANGUAGE_KEY)

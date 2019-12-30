@@ -53,6 +53,8 @@ class DialogIO:
     out_image_caption: str = None
     new_message: bool = True
 
+    username: str = None
+
     _lang: Union[languages] = None
 
     ASKED = '__asked'

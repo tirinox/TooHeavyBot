@@ -5,6 +5,10 @@ from chat.message_handler import MessageHandler
 from chat.msg_io import AbstractMessageSender
 from util.config import Config
 
+import asyncio
+
+import logging
+
 
 class TelegramBot(AbstractMessageSender):
     @staticmethod
@@ -19,6 +23,8 @@ class TelegramBot(AbstractMessageSender):
         self.bot = Bot(token, parse_mode=types.ParseMode.HTML)
         self.dispatcher = Dispatcher(self.bot)
 
+        self.username = None
+
         @self.dispatcher.message_handler(content_types=ContentTypes.ANY)
         async def echo(message: types.Message):
             # only personal chats
@@ -27,7 +33,13 @@ class TelegramBot(AbstractMessageSender):
 
             await self.handler.handle(message)
 
+    async def _me_getter(self):
+        me = await self.bot.me
+        self.username = me['username']
+        logging.info(f'My bot user name is "{self.username}".')
+
     def serve(self):
+        asyncio.get_event_loop().run_until_complete(self._me_getter())
         executor.start_polling(self.dispatcher, skip_updates=True)
 
     async def send_photo(self, to_uid, photo, caption=None, disable_notification=False):

@@ -63,6 +63,7 @@ class BotOnInputs:
     async def dispatch_message_to_handler(self, message: Message):
         from_user = MagicMock()
         from_user.id = self.local_uid
+        from_user.username = f'local_{self.local_uid}'
         message.from_user = from_user
         await self.message_handler.handle(message)
 

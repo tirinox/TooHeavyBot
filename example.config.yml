@@ -6,7 +6,6 @@ telegram:
 db:
   redis:
     url: 'redis://thb_redis:6379/7'
-    db: 7
 
 admin:
   list:
@@ -20,4 +19,7 @@ periodic:
 
 weight_aim:
   calc:
-    smooth_period: 4
+    smooth_period: 10
+
+groups:
+  max_members: 10
