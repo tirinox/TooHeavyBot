@@ -64,13 +64,13 @@ async def ask_notification_time(io: DialogIO):
 async def ask_language(io: DialogIO):
     lang = io.language
 
-    result = create_menu(io, io.language.s_lang_hi, variants=[
+    result = create_menu(io, lang.s_lang_hi, variants=[
         (lang.s_english, 'eng'),
         (lang.s_russian, 'rus')
     ])
     if result in ('eng', 'rus'):
         await io.change_language(result)
-        io.reply(io.language.s_lang_set).back()
+        io.reply(lang.s_lang_set).back()
 
 
 @sentence

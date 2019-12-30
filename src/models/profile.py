@@ -15,6 +15,10 @@ class Profile(ModelBase):
     LANGUAGE_KEY = 'lang'
     USERNAME_KEY = 'username'
 
+    def __init__(self, ident):
+        super().__init__(ident)
+        self._language = None
+
     async def get_username(self):
         return await self.get_prop(self.USERNAME_KEY)
 
@@ -22,7 +26,9 @@ class Profile(ModelBase):
         await self.set_prop(self.USERNAME_KEY, username)
 
     async def get_language(self):
-        return await self.get_prop(self.LANGUAGE_KEY)
+        if self._language is None:
+            self._language = await self.get_prop(self.LANGUAGE_KEY)
+        return self._language
 
     async def set_language(self, lang):
         self._language = lang

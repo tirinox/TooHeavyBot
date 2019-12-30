@@ -1,5 +1,5 @@
-from util.database import ModelBase, DB
 from util import gen_id
+from util.database import ModelBase
 from util.date import now_tsi
 
 
@@ -8,7 +8,7 @@ class Group(ModelBase):
     CREATED_DATE_KEY = 'created_dt'
 
     async def get_members(self):
-        return await self.redis.smembers(self.key(self.MEMBERS_KEY))
+        return set(await self.redis.smembers(self.key(self.MEMBERS_KEY)))
 
     async def user_join(self, profile_ident):
         return await self.redis.sadd(self.key(self.MEMBERS_KEY), profile_ident)
@@ -22,3 +22,10 @@ class Group(ModelBase):
         group = Group(group_ident)
         await group.redis.set(group.key(cls.CREATED_DATE_KEY), now_tsi())
         return group
+
+    async def remove(self):
+        await self.redis.delete(keys=[
+            self.key(self.MEMBERS_KEY),
+            self.key(self.CREATED_DATE_KEY)
+        ])
+

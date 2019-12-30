@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Union
 from abc import ABC, abstractmethod
+from chat.bot_telegram import TelegramBot
 
 from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, Location, Message
 
@@ -40,6 +41,20 @@ def get_message_handlers(my_globals: dict):
     return {fname(func): func for _, func in my_globals.items() if is_sentence(func)}
 
 
+
+class AbstractMessageSender(ABC):
+    def __init__(self):
+        ...
+
+    @abstractmethod
+    async def send_photo(self, to_uid, photo, caption=None, disable_notification=False):
+        ...
+
+    @abstractmethod
+    async def send_text(self, to_uid, text, reply_markup=None, disable_notification=False):
+        ...
+
+
 @dataclass
 class DialogIO:
     profile: Profile
@@ -54,17 +69,19 @@ class DialogIO:
     new_message: bool = True
 
     username: str = None
+    sender: AbstractMessageSender = None
 
     _lang: Union[languages] = None
 
     ASKED = '__asked'
 
     @staticmethod
-    async def load(profile: Profile, text='', location=None):
+    async def load(profile: Profile, text='', location=None, sender: AbstractMessageSender=None):
         dialog_state = await profile.dialog_state()
         io_obj = DialogIO(profile, text, dialog_state)
         io_obj.location = location
         io_obj.language = await profile.get_language()
+        io_obj.sender = sender
         return io_obj
 
     @property
@@ -248,19 +265,6 @@ def ask_for_number(io: DialogIO,
             io.ask(error_msg or io.language.invalid_number)
     else:
         io.ask(prompt, keyboard=[io.language.cancel] if with_cancel else None)
-
-
-class AbstractMessageSender(ABC):
-    def __init__(self):
-        ...
-
-    @abstractmethod
-    async def send_photo(self, to_uid, photo, caption=None, disable_notification=False):
-        ...
-
-    @abstractmethod
-    async def send_text(self, to_uid, text, reply_markup=None, disable_notification=False):
-        ...
 
 
 class AbstractCommandHandler(ABC):

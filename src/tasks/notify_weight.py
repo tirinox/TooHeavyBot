@@ -23,6 +23,13 @@ class WeightNotifier:
 
     @classmethod
     async def activate_notification(cls, profile: Profile, hh, mm):
+        """
+        Activate weight notification for the user
+        :param profile: Profile for notification
+        :param hh: hour (his)
+        :param mm: minutes (his)
+        :return: seconds to next notification
+        """
         await cls.deactivate_notification(profile)
 
         await profile.set_prop(cls.KEY_NOTIFICATION_TIME, f'{hh}:{mm}')
@@ -60,7 +67,14 @@ class WeightNotifier:
         except (TypeError, ValueError, AttributeError):
             ...
 
-    async def notify_one_user(self, user_id, now_ts):
+    async def _send_notification(self, profile: Profile):
+        tr = await profile.get_translator()
+        io = await DialogIO.load(profile, '')
+        # "'Пора бы внести вес, еще не внесли еще сегодня!'"
+        io.add(tr.notification_weight).push(ask_current_weight)
+        await self.handler.revolve_io(io)
+
+    async def _notify_one_user(self, user_id, now_ts):
         profile = Profile(user_id)
         wp = WeightProfile(profile)
 
@@ -73,14 +87,8 @@ class WeightNotifier:
         last_ts = 0 if last_ts is None else int(last_ts)
 
         if now_ts > last_ts + self.NOTIFICATION_COOLDOWN:
-            tr = await profile.get_translator()
-
             await profile.set_prop(self.KEY_LAST_SENT_TS, now_ts)
-
-            io = await DialogIO.load(profile, '')
-            # "'Пора бы внести вес, еще не внесли еще сегодня!'"
-            io.add(tr.notification_weight).push(ask_current_weight)
-            await self.handler.revolve_io(io)
+            await self._send_notification(profile)
 
     async def notify_all_by_time(self):
         now = datetime.now(tz=get_localzone())
@@ -89,7 +97,7 @@ class WeightNotifier:
         tr = TimeTracker(self.KEY_WEIGHT_TRACKER, now.hour, now.minute)
 
         user_ids = await tr.list()
-        await asyncio.gather(*(self.notify_one_user(user_id, now_ts) for user_id in user_ids))
+        await asyncio.gather(*(self._notify_one_user(user_id, now_ts) for user_id in user_ids))
 
     @classmethod
     async def fix_bad_notifications(cls):

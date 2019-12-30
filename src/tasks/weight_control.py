@@ -10,6 +10,9 @@ import numpy as np
 
 
 class WeightProfile:
+    WEIGHT_START_KEY = 'weight_start'
+    WEIGHT_AIM_KEY = 'weight_aim'
+
     def __init__(self, p: Profile, weight: float = 0.0):
         self.p = p
         self.weight = weight
@@ -17,16 +20,16 @@ class WeightProfile:
         self.tps = []
 
     async def get_weight_start(self):
-        return try_parse_float(await self.p.get_prop('weight_start'))
+        return try_parse_float(await self.p.get_prop(self.WEIGHT_START_KEY))
 
     async def set_weight_start(self, v):
-        await self.p.set_prop('weight_start', try_parse_float(v))
+        await self.p.set_prop(self.WEIGHT_START_KEY, try_parse_float(v))
 
     async def get_weight_aim(self):
-        return try_parse_float(await self.p.get_prop('weight_aim'))
+        return try_parse_float(await self.p.get_prop(self.WEIGHT_AIM_KEY))
 
     async def set_weight_aim(self, v):
-        await self.p.set_prop('weight_aim', try_parse_float(v))
+        await self.p.set_prop(self.WEIGHT_AIM_KEY, try_parse_float(v))
 
     @staticmethod
     def aim_percent_formula(current, aim, start):

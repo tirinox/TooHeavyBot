@@ -74,7 +74,7 @@ class MessageHandler:
 
     async def handle(self, input_message: Message):
         profile = Profile(input_message.from_user.id)
-        io_obj = await DialogIO.load(profile, input_message.text, input_message.location)
+        io_obj = await DialogIO.load(profile, input_message.text, input_message.location, self.sender)
         io_obj.username = input_message.from_user.username
         io_obj.message = input_message
 
