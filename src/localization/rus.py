@@ -100,3 +100,5 @@ class LangRussian:
         # my group menu
 
         self.myg_title = 'Настройка моей группы.'
+        self.myg_notification_joined_group = lambda name: f'{name} присоединился к вашей группе.'
+        self.myg_notification_left_group = lambda name: f'{name} покинул вашу группу.'

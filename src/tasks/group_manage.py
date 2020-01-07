@@ -41,7 +41,7 @@ async def leave_group(p: Profile, g: Group, sender: AbstractMessageSender):
 
     members = await g.get_members()
     if members:
-        message = ''  # fixme: message
+        message = tr.myg_notification_left_group(p.get_username())
         send_message_to_group_members(members, message, sender)
     else:
         await g.remove()
@@ -55,5 +55,5 @@ async def join_group(p: Profile, g: Group, sender: AbstractMessageSender):
 
     tr = await p.get_translator()
 
-    message = ''  # fixme: message (notify other members that someone joined)
+    message = tr.myg_notification_joined_group(p.get_username())
     send_message_to_group_members(members, message, sender)

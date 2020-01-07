@@ -100,3 +100,5 @@ class LangEnglish:
         # my group menu
 
         self.myg_title = 'My group settings.'
+        self.myg_notification_joined_group = lambda name: f'@{name} has joined your group.'
+        self.myg_notification_left_group = lambda name: f'@{name} has left your group.'
